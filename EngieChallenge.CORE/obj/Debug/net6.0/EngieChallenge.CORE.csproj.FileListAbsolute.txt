@@ -1,0 +1,12 @@
+C:\Users\Avet_\Source\Repos\EngieChallenge.API\EngieChallenge.CORE\obj\Debug\net6.0\EngieChallenge.CORE.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Avet_\Source\Repos\EngieChallenge.API\EngieChallenge.CORE\obj\Debug\net6.0\EngieChallenge.CORE.AssemblyInfoInputs.cache
+C:\Users\Avet_\Source\Repos\EngieChallenge.API\EngieChallenge.CORE\obj\Debug\net6.0\EngieChallenge.CORE.AssemblyInfo.cs
+C:\Users\Avet_\Source\Repos\EngieChallenge.API\EngieChallenge.CORE\obj\Debug\net6.0\EngieChallenge.CORE.csproj.CoreCompileInputs.cache
+C:\Users\Avet_\Source\Repos\EngieChallenge.API\EngieChallenge.CORE\bin\Debug\net6.0\EngieChallenge.CORE.deps.json
+C:\Users\Avet_\Source\Repos\EngieChallenge.API\EngieChallenge.CORE\bin\Debug\net6.0\EngieChallenge.CORE.dll
+C:\Users\Avet_\Source\Repos\EngieChallenge.API\EngieChallenge.CORE\bin\Debug\net6.0\EngieChallenge.CORE.pdb
+C:\Users\Avet_\Source\Repos\EngieChallenge.API\EngieChallenge.CORE\obj\Debug\net6.0\EngieChallenge.CORE.dll
+C:\Users\Avet_\Source\Repos\EngieChallenge.API\EngieChallenge.CORE\obj\Debug\net6.0\refint\EngieChallenge.CORE.dll
+C:\Users\Avet_\Source\Repos\EngieChallenge.API\EngieChallenge.CORE\obj\Debug\net6.0\EngieChallenge.CORE.pdb
+C:\Users\Avet_\Source\Repos\EngieChallenge.API\EngieChallenge.CORE\obj\Debug\net6.0\ref\EngieChallenge.CORE.dll
+C:\Users\Avet_\source\repos\EngieChallenge.API\EngieChallenge.CORE\obj\Debug\net6.0\EngieChallenge.CORE.csproj.AssemblyReference.cache
