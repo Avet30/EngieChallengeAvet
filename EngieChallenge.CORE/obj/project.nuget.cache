@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "YLVKLYiYjMeGpHxwC0V/5pMaNR1VMI2FaTY1BQ2JvXgDZEVopft5dRMkRjxfDKUaa7QbQDO8W9ITpAjs15Axag==",
+  "dgSpecHash": "3PgG5simim+sFAdwNWweonuF+KAmYA9xoKAx1VIsr3QEYkH3AYJoDvEgK8QELZM/BEDroL9F8cN89DDfx1kNpA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\Avet_\\source\\repos\\EngieChallenge.API\\EngieChallenge.CORE\\EngieChallenge.CORE.csproj",
+  "projectFilePath": "C:\\Users\\Avet_\\Source\\Repos\\EngieChallengeAvet\\EngieChallenge.CORE\\EngieChallenge.CORE.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Avet_\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.0\\microsoft.extensions.dependencyinjection.abstractions.8.0.0.nupkg.sha512",
     "C:\\Users\\Avet_\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\8.0.0\\microsoft.extensions.logging.abstractions.8.0.0.nupkg.sha512"

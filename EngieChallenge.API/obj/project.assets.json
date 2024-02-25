@@ -477,11 +477,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Avet_\\source\\repos\\EngieChallenge.API\\EngieChallenge.API\\EngieChallenge.API.csproj",
+      "projectUniqueName": "C:\\Users\\Avet_\\Source\\Repos\\EngieChallengeAvet\\EngieChallenge.API\\EngieChallenge.API.csproj",
       "projectName": "EngieChallenge.API",
-      "projectPath": "C:\\Users\\Avet_\\source\\repos\\EngieChallenge.API\\EngieChallenge.API\\EngieChallenge.API.csproj",
+      "projectPath": "C:\\Users\\Avet_\\Source\\Repos\\EngieChallengeAvet\\EngieChallenge.API\\EngieChallenge.API.csproj",
       "packagesPath": "C:\\Users\\Avet_\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Avet_\\source\\repos\\EngieChallenge.API\\EngieChallenge.API\\obj\\",
+      "outputPath": "C:\\Users\\Avet_\\Source\\Repos\\EngieChallengeAvet\\EngieChallenge.API\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Avet_\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -498,8 +498,8 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "projectReferences": {
-            "C:\\Users\\Avet_\\source\\repos\\EngieChallenge.API\\EngieChallenge.CORE\\EngieChallenge.CORE.csproj": {
-              "projectPath": "C:\\Users\\Avet_\\source\\repos\\EngieChallenge.API\\EngieChallenge.CORE\\EngieChallenge.CORE.csproj"
+            "C:\\Users\\Avet_\\Source\\Repos\\EngieChallengeAvet\\EngieChallenge.CORE\\EngieChallenge.CORE.csproj": {
+              "projectPath": "C:\\Users\\Avet_\\Source\\Repos\\EngieChallengeAvet\\EngieChallenge.CORE\\EngieChallenge.CORE.csproj"
             }
           }
         }

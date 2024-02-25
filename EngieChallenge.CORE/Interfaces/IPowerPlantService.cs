@@ -6,7 +6,7 @@ namespace EngieChallenge.CORE.Interfaces
     {
         List<PowerPlant> CalculateRealCostAndPower(List<PowerPlant> powerPlants, Fuel fuel);
 
-        List<PowerPlant> OrderPowerPlants(List<PowerPlant> powerPlants, Fuel fuel);
+        //List<PowerPlant> OrderPowerPlants(List<PowerPlant> powerPlants, Fuel fuel);
 
         List<PlannedOutput> GetPlannedOutput(List<PowerPlant> powerPlants, Fuel fuel, decimal plannedLoad);
     }

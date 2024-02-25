@@ -48,11 +48,6 @@ namespace EngieChallenge.CORE.Services
                     pwPlants.Add(plant);
                 }
 
-                //logger pour chaque plant
-                foreach (var plant in pwPlants)
-                {
-                    _Logger.LogInformation($"Plant: {plant.Name}, Type: {plant.Type}, CalculatedPMax: {plant.CalculatedPMax}, CalculatedFuelCost: {plant.CalculatedFuelCost}");
-                }
             }
             catch (Exception ex)
             {
@@ -63,79 +58,109 @@ namespace EngieChallenge.CORE.Services
             return pwPlants;
         }
 
-        public List<PowerPlant> OrderPowerPlants(List<PowerPlant> powerPlants, Fuel fuel)
-        {
-            var realCostAndPowerProducedByPlants = CalculateRealCostAndPower(powerPlants, fuel);
+        //public List<PowerPlant> OrderPowerPlants(List<PowerPlant> powerPlants, Fuel fuel)
+        //{
+        //    var realCostAndPowerProducedByPlants = CalculateRealCostAndPower(powerPlants, fuel);
 
-            try
-            {
-                var orderedPlants = powerPlants
-                    //Ordonné par Efficiency
-                    .OrderByDescending(x => x.Efficiency)
-                    //Si même efficiency alors ordonné par le realFuelCost
-                    .ThenBy(x => x.CalculatedFuelCost)
-                    //Si même efficiency et realFuelCost alors ordonné par le realPMax
-                    .ThenByDescending(x => x.CalculatedPMax)
-                    .ToList();
-
-                //logger pour chaque plant
-                foreach (var plant in orderedPlants)
-                {
-                    _Logger.LogInformation($"Ordered Plant: {plant.Name}, Type: {plant.Type}, Efficiency: {plant.Efficiency}, CalculatedFuelCost: {plant.CalculatedFuelCost}, CalculatedPMax: {plant.CalculatedPMax}");
-                }
-                return orderedPlants;
-            }
-            catch (Exception ex)
-            {
-                _Logger.LogError($"An error occurred while ordering power plants: {ex}");
-                throw ex;
-            }
-        }
+        //    try
+        //    {
+        //        var orderedPlants = realCostAndPowerProducedByPlants
+        //            //Ordonné par Efficiency
+        //            .OrderByDescending(x => x.Efficiency)
+        //            //Si même efficiency alors ordonné par le realFuelCost
+        //            .ThenBy(x => x.CalculatedFuelCost)
+        //            //Si même efficiency et realFuelCost alors ordonné par le realPMax
+        //            .ThenByDescending(x => x.CalculatedPMax)
+        //            .ToList();
+        //        return orderedPlants;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _Logger.LogError($"An error occurred while ordering power plants: {ex}");
+        //        throw ex;
+        //    }
+        //}
 
         public List<PlannedOutput> GetPlannedOutput(List<PowerPlant> powerPlants, Fuel fuel, decimal plannedLoad)
         {
-            
+            //var orderedPlants = OrderPowerPlants(powerPlants, fuel);
+            var orderedPlants = CalculateRealCostAndPower(powerPlants, fuel);
+
             try
             {
-                //appel aux PWPlants ordonné
-                var orderedPowerPlants = OrderPowerPlants(powerPlants, fuel);
-
                 var plannedOutputs = new List<PlannedOutput>();
                 var remainingLoad = plannedLoad;
-
-                foreach (var powerPlant in orderedPowerPlants)
+ 
+                foreach (var windTurbine in orderedPlants.Where(p => p.Type == PowerPlantType.windturbine))
                 {
+                    if (remainingLoad == 0)
+                        break; // Objectif de load OK
+
+                    // Y a t'il du vent pour utiliser la PmaxCalculé des windturbines ?
+                    decimal windPower = windTurbine.CalculatedPMax;
+
+                    decimal totalNextWindPower = 0;
+                    bool foundCurrentWindTurbine = false;
+
+                    foreach (var plant in orderedPlants)
+                    {
+                        if (!foundCurrentWindTurbine)
+                        {
+                            if (plant == windTurbine)
+                            {
+                                foundCurrentWindTurbine = true;
+                            }
+                            continue; // Skip jusqu'à trouver le windturbine actuel
+                        }
+
+                        if (plant.Type == PowerPlantType.windturbine && windTurbine.CalculatedPMax <= remainingLoad)
+                        {
+                            totalNextWindPower += plant.CalculatedPMax;
+                        }
+                        else
+                        {
+                            break; //On arrête de rajouter du Power si la condition n'est pas atteinte
+                        }
+                    }
+
+                    // Si la puissance cumulé des prochains wind turbines + l'actuel ne dépasse pas le Remaining Load
+                    // Utiliser le windturbine à sa PMax Calculé
+                    if (windPower + totalNextWindPower <= remainingLoad && windPower >= windTurbine.PMin)
+                    {
+                        plannedOutputs.Add(new PlannedOutput { Name = windTurbine.Name, P = windPower });
+                        remainingLoad -= windPower;
+                    }
+                }
+
+                //Après tri des windturbines, si load restant > 0 , alors on utilise les autres type de Plants.
+                foreach (var powerPlant in orderedPlants.Where(p => p.Type != PowerPlantType.windturbine))
+                {
+                    if (remainingLoad == 0)
+                        break; // Objectif de load OK
+
                     decimal plannedPower = 0;
 
-                    //Si le Pmax calculé == 0 ou la PMin est supérieur à la charge demandé => PlannedPower = 0
-                    if (powerPlant.CalculatedPMax == 0 || powerPlant.PMin > remainingLoad)
-                    {
-                        plannedPower = 0;
-                    }
-                    //Si la charge demandé est plus petite ou égale au PMax calculé et la charge est plus grande ou égale que le PMin alors on on assigne la charge demandé au plannedPower
-                    else if (remainingLoad <= powerPlant.CalculatedPMax && remainingLoad >= powerPlant.PMin)
+                    if (powerPlant.PMin <= remainingLoad && remainingLoad <= powerPlant.CalculatedPMax)
                     {
                         plannedPower = remainingLoad;
-                        remainingLoad = 0;
+                        remainingLoad = 0; //Objectif de load OK
                     }
-                    //Si la charge excède le PMax, alors on assigne La PMax au plannedPower pour cette Plant, et la charge demandé restante est réduite par le PMax
-                    else
+                    else if (remainingLoad > powerPlant.CalculatedPMax)
                     {
                         plannedPower = powerPlant.CalculatedPMax;
                         remainingLoad -= powerPlant.CalculatedPMax;
                     }
 
-                    plannedOutputs.Add(new PlannedOutput()
+                    if (plannedPower > 0)
                     {
-                        Name = powerPlant.Name,
-                        P = plannedPower
-                    });
+                        plannedOutputs.Add(new PlannedOutput { Name = powerPlant.Name, P = plannedPower });
+                    }
                 }
 
-                //logger de chaque plant et son Power Output.
-                foreach (var output in plannedOutputs)
+                // Si il reste du load et que les plants ne suffisent pas, logger Alerte
+                if (remainingLoad > 0)
                 {
-                    _Logger.LogInformation($"Planned Output: {output.Name}, Power: {output.P}");
+                    _Logger.LogWarning($"Unable to fulfill planned load. Remaining load: {remainingLoad}");
                 }
 
                 return plannedOutputs;
@@ -144,7 +169,7 @@ namespace EngieChallenge.CORE.Services
             {
                 // Log the exception
                 _Logger.LogError($"An error occurred while calculating planned output: {ex}");
-                throw ex;
+                throw;
             }
         }
     }
