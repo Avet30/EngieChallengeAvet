@@ -106,7 +106,6 @@ namespace EngieChallenge.CORE.Services
         {
             var orderedPlantsWindTurbines = OrderWindTurbines(powerPlants, fuel);
             var orderedPlantsGasAndTurboJet = OrderGasFiredAndTurboJet(powerPlants, fuel);
-
             try
             {
                 var plannedOutputs = new List<PlannedOutput>();
