@@ -58,40 +58,61 @@ namespace EngieChallenge.CORE.Services
             return pwPlants;
         }
 
-        //public List<PowerPlant> OrderPowerPlants(List<PowerPlant> powerPlants, Fuel fuel)
-        //{
-        //    var realCostAndPowerProducedByPlants = CalculateRealCostAndPower(powerPlants, fuel);
+        public List<PowerPlant> OrderWindTurbines(List<PowerPlant> powerPlants, Fuel fuel)
+        {
+            var realCostAndPowerProducedByPlants = CalculateRealCostAndPower(powerPlants, fuel);
 
-        //    try
-        //    {
-        //        var orderedPlants = realCostAndPowerProducedByPlants
-        //            //Ordonné par Efficiency
-        //            .OrderByDescending(x => x.Efficiency)
-        //            //Si même efficiency alors ordonné par le realFuelCost
-        //            .ThenBy(x => x.CalculatedFuelCost)
-        //            //Si même efficiency et realFuelCost alors ordonné par le realPMax
-        //            .ThenByDescending(x => x.CalculatedPMax)
-        //            .ToList();
-        //        return orderedPlants;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _Logger.LogError($"An error occurred while ordering power plants: {ex}");
-        //        throw ex;
-        //    }
-        //}
+            try
+            {
+                var orderedPlants = realCostAndPowerProducedByPlants
+                    //Ordonné par Efficiency
+                    .OrderByDescending(x => x.Efficiency)
+                    //Si même efficiency alors ordonné par le realFuelCost
+                    .ThenBy(x => x.CalculatedFuelCost)
+                    //Si même efficiency et realFuelCost alors ordonné par le realPMax
+                    .ThenByDescending(x => x.CalculatedPMax)
+                    .ToList();
+                return orderedPlants;
+            }
+            catch (Exception ex)
+            {
+                _Logger.LogError($"An error occurred while ordering power plants: {ex}");
+                throw ex;
+            }
+        }
+
+        public List<PowerPlant> OrderGasFiredAndTurboJet(List<PowerPlant> powerPlants, Fuel fuel)
+        {
+            var realCostAndPowerProducedByPlants = CalculateRealCostAndPower(powerPlants, fuel);
+
+            try
+            {
+                var orderedPlants = realCostAndPowerProducedByPlants
+                    //Ordonné par Coût calculé
+                    .OrderBy(x => x.CalculatedFuelCost)
+                    //Si même coût calculé alors ordonné par le PMaxCalculé
+                    .ThenBy(x => x.CalculatedPMax)
+                    .ToList();
+                return orderedPlants;
+            }
+            catch (Exception ex)
+            {
+                _Logger.LogError($"An error occurred while ordering power plants: {ex}");
+                throw ex;
+            }
+        }
 
         public List<PlannedOutput> GetPlannedOutput(List<PowerPlant> powerPlants, Fuel fuel, decimal plannedLoad)
         {
-            //var orderedPlants = OrderPowerPlants(powerPlants, fuel);
-            var orderedPlants = CalculateRealCostAndPower(powerPlants, fuel);
+            var orderedPlantsWindTurbines = OrderWindTurbines(powerPlants, fuel);
+            var orderedPlantsGasAndTurboJet = OrderGasFiredAndTurboJet(powerPlants, fuel);
 
             try
             {
                 var plannedOutputs = new List<PlannedOutput>();
                 var remainingLoad = plannedLoad;
  
-                foreach (var windTurbine in orderedPlants.Where(p => p.Type == PowerPlantType.windturbine))
+                foreach (var windTurbine in orderedPlantsWindTurbines.Where(p => p.Type == PowerPlantType.windturbine))
                 {
                     if (remainingLoad == 0)
                         break; // Objectif de load OK
@@ -102,7 +123,7 @@ namespace EngieChallenge.CORE.Services
                     decimal totalNextWindPower = 0;
                     bool foundCurrentWindTurbine = false;
 
-                    foreach (var plant in orderedPlants)
+                    foreach (var plant in orderedPlantsWindTurbines)
                     {
                         if (!foundCurrentWindTurbine)
                         {
@@ -133,7 +154,7 @@ namespace EngieChallenge.CORE.Services
                 }
 
                 //Après tri des windturbines, si load restant > 0 , alors on utilise les autres type de Plants.
-                foreach (var powerPlant in orderedPlants.Where(p => p.Type != PowerPlantType.windturbine))
+                foreach (var powerPlant in orderedPlantsGasAndTurboJet.Where(p => p.Type != PowerPlantType.windturbine))
                 {
                     if (remainingLoad == 0)
                         break; // Objectif de load OK

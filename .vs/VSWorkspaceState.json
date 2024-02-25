@@ -1,7 +1,10 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\EngieChallenge.CORE",
+    "\\EngieChallenge.CORE\\Interfaces",
+    "\\EngieChallenge.CORE\\Services"
   ],
-  "SelectedNode": "\\EngieChallenge.API.sln",
+  "SelectedNode": "\\EngieChallenge.CORE\\Services\\PowerPlantService.cs",
   "PreviewInSolutionExplorer": false
 }
