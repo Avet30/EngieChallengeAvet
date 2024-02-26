@@ -1,4 +1,5 @@
-﻿using EngieChallenge.CORE.Interfaces;
+﻿using EngieChallenge.CORE.Exceptions;
+using EngieChallenge.CORE.Interfaces;
 using EngieChallenge.CORE.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -22,17 +23,23 @@ namespace EngieChallenge.API.Controllers
 
         [HttpPost]
         public IActionResult Calculate([FromBody] Payload request)
-        {
-            var result = _powerPlantService.GetPlannedOutput(request.Powerplants, request.Fuels, request.Load);
-
-            if(result == null)
+        {          
+            try
             {
-                _Logger.LogError("Error while getting plannedOutput");
-                return NotFound("Error while getting plannedOutput");
-            }
+                // Call the service method to calculate planned output
+                var plannedOutput = _powerPlantService.GetPlannedOutput(request.Powerplants, request.Fuels, request.Load);
 
-            _Logger.LogInformation($"Planned output: {result}");
-            return Ok(result);                     
+                // Return the calculated planned output
+                return Ok(plannedOutput);
+            }
+            catch (PlannedOutputCalculationException ex)
+            {
+                // Log the exception (if needed)
+                _Logger.LogError($"An error occurred while calculating planned output: {ex.Message}");
+
+                // Return a custom error response without the stack trace
+                return BadRequest("Unable to calculate planned output. Remaining load cannot be fulfilled.");
+            }
         }
     }
 }

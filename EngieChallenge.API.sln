@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33801.468
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EngieChallenge.API", "EngieChallenge.API\EngieChallenge.API.csproj", "{4979CC69-06B2-4509-88FB-4934C59F590E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EngieChallenge.API", "EngieChallenge.API\EngieChallenge.API.csproj", "{4979CC69-06B2-4509-88FB-4934C59F590E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EngieChallenge.CORE", "EngieChallenge.CORE\EngieChallenge.CORE.csproj", "{B3EB06AA-60CB-40E2-A8DD-E67364AEA45B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EngieChallenge.CORE", "EngieChallenge.CORE\EngieChallenge.CORE.csproj", "{B3EB06AA-60CB-40E2-A8DD-E67364AEA45B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

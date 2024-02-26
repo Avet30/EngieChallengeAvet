@@ -1,4 +1,5 @@
-﻿using EngieChallenge.CORE.Interfaces;
+﻿using EngieChallenge.CORE.Exceptions;
+using EngieChallenge.CORE.Interfaces;
 using EngieChallenge.CORE.Models;
 using EngieChallenge.CORE.Models.Enums;
 using Microsoft.Extensions.Logging;
@@ -44,17 +45,14 @@ namespace EngieChallenge.CORE.Services
                         plant.CalculatedPMax = plant.PMax;
                         plant.CalculatedFuelCost = fuel.Kerosine / plant.Efficiency;
                     }
-
                     pwPlants.Add(plant);
                 }
-
             }
             catch (Exception ex)
             {
                 _Logger.LogError($"An error occurred while calculating real cost and power: {ex}");
                 throw ex;
             }
-
             return pwPlants;
         }
 
@@ -152,18 +150,45 @@ namespace EngieChallenge.CORE.Services
                     }
                 }
 
-                //Après tri des windturbines, si load restant > 0 , alors on utilise les autres type de Plants.
-                foreach (var powerPlant in orderedPlantsGasAndTurboJet.Where(p => p.Type != PowerPlantType.windturbine))
+
+                for (int i = 0; i < orderedPlantsGasAndTurboJet.Count; i++)
                 {
+                    var powerPlant = orderedPlantsGasAndTurboJet[i];
+
+                  
+                    if (powerPlant.Type == PowerPlantType.windturbine)
+                        continue;
+
                     if (remainingLoad == 0)
-                        break; // Objectif de load OK
+                        break; // Objective of load OK
 
                     decimal plannedPower = 0;
 
+
+                    if (i + 1 < orderedPlantsGasAndTurboJet.Count)
+                    {
+                        var nextPlant = orderedPlantsGasAndTurboJet[i + 1];
+
+                        if (remainingLoad - powerPlant.CalculatedPMax < 0)
+                        {
+                            // Si le load restant est moins que 0, utiliser le plant actuel car il remplit le role
+                        }
+                        else
+                        {
+                            // Sinon au compare au Pmin du prochain
+                            if (remainingLoad - powerPlant.CalculatedPMax <= nextPlant.PMin)
+                            {
+                                //On skip de plant
+                                continue;
+                            }
+                        }
+                    }
+
+                    // Calcul du PW du Plant actuel
                     if (powerPlant.PMin <= remainingLoad && remainingLoad <= powerPlant.CalculatedPMax)
                     {
                         plannedPower = remainingLoad;
-                        remainingLoad = 0; //Objectif de load OK
+                        remainingLoad = 0; // Objectif de load OK
                     }
                     else if (remainingLoad > powerPlant.CalculatedPMax)
                     {
@@ -181,6 +206,7 @@ namespace EngieChallenge.CORE.Services
                 if (remainingLoad > 0)
                 {
                     _Logger.LogWarning($"Unable to fulfill planned load. Remaining load: {remainingLoad}");
+                    throw new PlannedOutputCalculationException("Unable to calculate planned output. Remaining load cannot be fulfilled.");
                 }
 
                 return plannedOutputs;
@@ -189,8 +215,13 @@ namespace EngieChallenge.CORE.Services
             {
                 // Log the exception
                 _Logger.LogError($"An error occurred while calculating planned output: {ex}");
-                throw;
+                throw new PlannedOutputCalculationException("Unable to calculate planned output. Remaining load cannot be fulfilled.");
             }
         }
     }
 }
+
+
+
+
+

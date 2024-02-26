@@ -7,8 +7,10 @@
     "\\EngieChallenge.CORE",
     "\\EngieChallenge.CORE\\Interfaces",
     "\\EngieChallenge.CORE\\Models",
-    "\\EngieChallenge.CORE\\Services"
+    "\\EngieChallenge.CORE\\Services",
+    "\\EngieChallenge.TEST",
+    "\\EngieChallenge.TEST\\Models"
   ],
-  "SelectedNode": "\\EngieChallenge.CORE\\Services\\PowerPlantService.cs",
+  "SelectedNode": "\\EngieChallenge.TEST\\PowerPlantServiceTests.cs",
   "PreviewInSolutionExplorer": false
 }
