@@ -157,11 +157,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Avet_\\Source\\Repos\\EngieChallengeAvet\\EngieChallenge.CORE\\EngieChallenge.CORE.csproj",
+      "projectUniqueName": "C:\\Users\\Avet_\\source\\repos\\EngieChallengeAvet\\EngieChallenge.CORE\\EngieChallenge.CORE.csproj",
       "projectName": "EngieChallenge.CORE",
-      "projectPath": "C:\\Users\\Avet_\\Source\\Repos\\EngieChallengeAvet\\EngieChallenge.CORE\\EngieChallenge.CORE.csproj",
+      "projectPath": "C:\\Users\\Avet_\\source\\repos\\EngieChallengeAvet\\EngieChallenge.CORE\\EngieChallenge.CORE.csproj",
       "packagesPath": "C:\\Users\\Avet_\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Avet_\\Source\\Repos\\EngieChallengeAvet\\EngieChallenge.CORE\\obj\\",
+      "outputPath": "C:\\Users\\Avet_\\source\\repos\\EngieChallengeAvet\\EngieChallenge.CORE\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Avet_\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -184,6 +184,11 @@
         "warnAsError": [
           "NU1605"
         ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
       }
     },
     "frameworks": {
@@ -211,7 +216,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.400\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.200\\RuntimeIdentifierGraph.json"
       }
     }
   }

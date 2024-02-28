@@ -22,3 +22,4 @@ C:\Users\Avet_\Source\Repos\EngieChallengeAvet\EngieChallenge.CORE\obj\Debug\net
 C:\Users\Avet_\Source\Repos\EngieChallengeAvet\EngieChallenge.CORE\obj\Debug\net6.0\refint\EngieChallenge.CORE.dll
 C:\Users\Avet_\Source\Repos\EngieChallengeAvet\EngieChallenge.CORE\obj\Debug\net6.0\EngieChallenge.CORE.pdb
 C:\Users\Avet_\Source\Repos\EngieChallengeAvet\EngieChallenge.CORE\obj\Debug\net6.0\ref\EngieChallenge.CORE.dll
+C:\Users\Avet_\source\repos\EngieChallengeAvet\EngieChallenge.CORE\obj\Debug\net6.0\EngieChallenge.CORE.sourcelink.json

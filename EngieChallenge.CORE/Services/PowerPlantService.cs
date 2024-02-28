@@ -108,8 +108,9 @@ namespace EngieChallenge.CORE.Services
             {
                 var plannedOutputs = new List<PlannedOutput>();
                 var remainingLoad = plannedLoad;
- 
-                foreach (var windTurbine in orderedPlantsWindTurbines.Where(p => p.Type == PowerPlantType.windturbine))
+
+
+                foreach (var windTurbine in orderedPlantsWindTurbines.Where(p => p.Type == PowerPlantType.windturbine && p.CalculatedPMax != 0))
                 {
                     if (remainingLoad == 0)
                         break; // Objectif de load OK
@@ -155,7 +156,7 @@ namespace EngieChallenge.CORE.Services
                 {
                     var powerPlant = orderedPlantsGasAndTurboJet[i];
 
-                  
+
                     if (powerPlant.Type == PowerPlantType.windturbine)
                         continue;
 
@@ -165,25 +166,6 @@ namespace EngieChallenge.CORE.Services
                     decimal plannedPower = 0;
 
 
-                    if (i + 1 < orderedPlantsGasAndTurboJet.Count)
-                    {
-                        var nextPlant = orderedPlantsGasAndTurboJet[i + 1];
-
-                        if (remainingLoad - powerPlant.CalculatedPMax < 0)
-                        {
-                            // Si le load restant est moins que 0, utiliser le plant actuel car il remplit le role
-                        }
-                        else
-                        {
-                            // Sinon au compare au Pmin du prochain
-                            if (remainingLoad - powerPlant.CalculatedPMax <= nextPlant.PMin)
-                            {
-                                //On skip de plant
-                                continue;
-                            }
-                        }
-                    }
-
                     // Calcul du PW du Plant actuel
                     if (powerPlant.PMin <= remainingLoad && remainingLoad <= powerPlant.CalculatedPMax)
                     {
@@ -192,8 +174,27 @@ namespace EngieChallenge.CORE.Services
                     }
                     else if (remainingLoad > powerPlant.CalculatedPMax)
                     {
-                        plannedPower = powerPlant.CalculatedPMax;
-                        remainingLoad -= powerPlant.CalculatedPMax;
+                        if (i + 1 < orderedPlantsGasAndTurboJet.Count)
+                        {
+                            var nextPlant = orderedPlantsGasAndTurboJet[i + 1];
+                            var differential = remainingLoad - (powerPlant.CalculatedPMax + nextPlant.PMin);
+
+
+                            if (differential < 0)
+                            {
+
+                                plannedPower = (powerPlant.CalculatedPMax + differential);
+                                remainingLoad -= plannedPower;
+                                // Si le load restant est moins que 0, utiliser le plant actuel car il remplit le role
+                            }
+                            else
+                            {
+                                plannedPower = powerPlant.CalculatedPMax;
+                                remainingLoad -= powerPlant.CalculatedPMax;
+                            }
+
+                        }
+                        
                     }
 
                     if (plannedPower > 0)
