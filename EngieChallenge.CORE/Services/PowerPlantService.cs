@@ -22,8 +22,8 @@ namespace EngieChallenge.CORE.Services
         }
         public List<PowerPlant> CalculateRealCostAndPower(List<PowerPlant> powerPlants, Fuel fuel)
         {
-            try { 
-
+            try 
+            {
                     foreach (var plant in powerPlants)
                     {
                         plant.CalculatePMax(fuel);
