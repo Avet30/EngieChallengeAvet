@@ -44,11 +44,11 @@ namespace EngieChallenge.CORE.Services
             try
             {
                 var orderedPlants = realCostAndPowerProducedByPlants
-                    //Ordonné par Efficiency
+                    //Ordered By Efficiency
                     .OrderByDescending(x => x.Efficiency)
-                    //Si même efficiency alors ordonné par le realFuelCost
+                    //If same efficiency then ordered by realFuelCost
                     .ThenBy(x => x.CalculatedFuelCost)
-                    //Si même efficiency et realFuelCost alors ordonné par le realPMax
+                    //If same efficiency and realFuelCost then ordered by realPMax
                     .ThenByDescending(x => x.CalculatedPMax)
                     .ToList();
                 return orderedPlants;
@@ -65,9 +65,9 @@ namespace EngieChallenge.CORE.Services
             try
             {
                 var orderedPlants = realCostAndPowerProducedByPlants
-                    //Ordonné par Coût calculé
+                    //Ordered By CalculatedFuelCost
                     .OrderBy(x => x.CalculatedFuelCost)
-                    //Si même coût calculé alors ordonné par le PMaxCalculé
+                    //If same CalculatedFuelCost then ordered by CalculatedPMax
                     .ThenBy(x => x.CalculatedPMax)
                     .ToList();
                 return orderedPlants;
@@ -105,15 +105,16 @@ namespace EngieChallenge.CORE.Services
             }
             return totalNextWindPower;
         }
-        private decimal CalculatePlannedPower(List<PowerPlant> orderedPlantsGasAndTurboJet, int currentIndex, decimal remainingLoad)
+        private (decimal plannedPower, decimal updatedRemainingLoad) CalculatePlannedPower(List<PowerPlant> orderedPlantsGasAndTurboJet, int currentIndex, decimal remainingLoad)
         {
             var powerPlant = orderedPlantsGasAndTurboJet[currentIndex];
             decimal plannedPower = 0;
+            decimal updatedRemainingLoad = remainingLoad; // Initialize updatedRemainingLoad with remainingLoad
 
             if (powerPlant.PMin <= remainingLoad && remainingLoad <= powerPlant.CalculatedPMax)
             {
                 plannedPower = remainingLoad;
-                remainingLoad = 0; // Objective of load OK
+                updatedRemainingLoad = 0; // Objective of load OK
             }
             else if (remainingLoad > powerPlant.CalculatedPMax)
             {
@@ -125,17 +126,17 @@ namespace EngieChallenge.CORE.Services
                     if (differential < 0)
                     {
                         plannedPower = (powerPlant.CalculatedPMax + differential);
-                        remainingLoad -= plannedPower;
+                        updatedRemainingLoad -= plannedPower;
                         // If the remaining load is less than 0, use the current plant as it fulfills the role
                     }
                     else
                     {
                         plannedPower = powerPlant.CalculatedPMax;
-                        remainingLoad -= powerPlant.CalculatedPMax;
+                        updatedRemainingLoad -= powerPlant.CalculatedPMax;
                     }
                 }
             }
-            return plannedPower;
+            return (plannedPower, updatedRemainingLoad);
         }
         public List<PlannedOutput> GetPlannedOutput(List<PowerPlant> powerPlants, Fuel fuel, decimal plannedLoad)
         {
@@ -173,7 +174,10 @@ namespace EngieChallenge.CORE.Services
                     if (remainingLoad == 0)
                         break; // Objective of load OK
 
-                    decimal plannedPower = CalculatePlannedPower(orderedPlantsGasAndTurboJet, i, remainingLoad);
+                    //decimal plannedPower = CalculatePlannedPower(orderedPlantsGasAndTurboJet, i, remainingLoad);
+                    (decimal plannedPower, decimal updatedRemainingLoad) = CalculatePlannedPower(orderedPlantsGasAndTurboJet, i, remainingLoad);
+
+                    remainingLoad = updatedRemainingLoad; // Update remainingLoad with the updatedRemainingLoad from the method
 
                     if (plannedPower > 0)
                     {
