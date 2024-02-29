@@ -16,7 +16,35 @@ namespace EngieChallenge.CORE.Models
         public decimal Efficiency { get; set; }
         public decimal PMin { get; set; }
         public decimal PMax { get; set; }
-        public decimal CalculatedPMax { get; set; }
-        public decimal CalculatedFuelCost { get; set; }
+        public decimal CalculatedPMax { get; private set; }
+        public decimal CalculatedFuelCost { get; private set; }
+
+        public void CalculatePMax(Fuel fuel)
+        {
+            if (Type == PowerPlantType.windturbine)
+            {
+                CalculatedPMax = PMax / 100.0M * fuel.Wind;
+            }
+            else
+            {
+                CalculatedPMax = PMax;
+            }
+        }
+
+        public void CalculateFuelCost(Fuel fuel)
+        {
+            if (Type == PowerPlantType.windturbine)
+            {
+                CalculatedFuelCost = 0.0M;
+            }
+            else if (Type == PowerPlantType.gasfired)
+            {
+                CalculatedFuelCost = fuel.Gas / Efficiency;
+            }
+            else // Assuming default is Turbojet
+            {
+                CalculatedFuelCost = fuel.Kerosine / Efficiency;
+            }
+        }
     }
 }

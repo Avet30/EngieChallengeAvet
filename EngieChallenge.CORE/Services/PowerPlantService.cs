@@ -6,56 +6,37 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace EngieChallenge.CORE.Services
 {
     public class PowerPlantService : IPowerPlantService
     {
         private readonly ILogger<PowerPlantService> _Logger;
-
         public PowerPlantService(ILogger<PowerPlantService> logger)
         {
             _Logger = logger;
         }
         public List<PowerPlant> CalculateRealCostAndPower(List<PowerPlant> powerPlants, Fuel fuel)
         {
-            List<PowerPlant> pwPlants = new List<PowerPlant>();
+            try { 
 
-            try
-            {
-                foreach (var plant in powerPlants)
-                {
-                    //Calcul des Coûts et Puissance réel par rapport puissance du vent "Windturbine"
-                    if (plant.Type == PowerPlantType.windturbine)
+                    foreach (var plant in powerPlants)
                     {
-                        plant.CalculatedPMax = plant.PMax / 100.0M * fuel.Wind;
-                        plant.CalculatedFuelCost = 0.0M;
+                        plant.CalculatePMax(fuel);
+                        plant.CalculateFuelCost(fuel);
                     }
-                    //Calcul des Coûts et Puissance réel par rapport à l'efficience "Gasfired"
-                    else if (plant.Type == PowerPlantType.gasfired)
-                    {
-                        plant.CalculatedPMax = plant.PMax;
-                        plant.CalculatedFuelCost = fuel.Gas / plant.Efficiency;
-                    }
-                    //Calcul des Coûts et Puissance réel par rapport à l'efficience "Turbojet"
-                    else
-                    {
-                        plant.CalculatedPMax = plant.PMax;
-                        plant.CalculatedFuelCost = fuel.Kerosine / plant.Efficiency;
-                    }
-                    pwPlants.Add(plant);
-                }
             }
             catch (Exception ex)
             {
                 _Logger.LogError($"An error occurred while calculating real cost and power: {ex}");
                 throw ex;
             }
-            return pwPlants;
+            return powerPlants;
         }
-
         public List<PowerPlant> OrderWindTurbines(List<PowerPlant> powerPlants, Fuel fuel)
         {
             var realCostAndPowerProducedByPlants = CalculateRealCostAndPower(powerPlants, fuel);
@@ -78,11 +59,9 @@ namespace EngieChallenge.CORE.Services
                 throw ex;
             }
         }
-
         public List<PowerPlant> OrderGasFiredAndTurboJet(List<PowerPlant> powerPlants, Fuel fuel)
         {
             var realCostAndPowerProducedByPlants = CalculateRealCostAndPower(powerPlants, fuel);
-
             try
             {
                 var orderedPlants = realCostAndPowerProducedByPlants
@@ -99,7 +78,65 @@ namespace EngieChallenge.CORE.Services
                 throw ex;
             }
         }
+        private decimal CalculateTotalNextWindPower(List<PowerPlant> orderedPlantsWindTurbines, PowerPlant windTurbine, decimal remainingLoad)
+        {
+            decimal totalNextWindPower = 0;
+            bool foundCurrentWindTurbine = false;
 
+            foreach (var plant in orderedPlantsWindTurbines)
+            {
+                if (!foundCurrentWindTurbine)
+                {
+                    if (plant == windTurbine)
+                    {
+                        foundCurrentWindTurbine = true;
+                    }
+                    continue; // Skip until the current windTurbine is found
+                }
+
+                if (plant.Type == PowerPlantType.windturbine && windTurbine.CalculatedPMax <= remainingLoad)
+                {
+                    totalNextWindPower += plant.CalculatedPMax;
+                }
+                else
+                {
+                    break; // Stop adding power if the condition is not met
+                }
+            }
+            return totalNextWindPower;
+        }
+        private decimal CalculatePlannedPower(List<PowerPlant> orderedPlantsGasAndTurboJet, int currentIndex, decimal remainingLoad)
+        {
+            var powerPlant = orderedPlantsGasAndTurboJet[currentIndex];
+            decimal plannedPower = 0;
+
+            if (powerPlant.PMin <= remainingLoad && remainingLoad <= powerPlant.CalculatedPMax)
+            {
+                plannedPower = remainingLoad;
+                remainingLoad = 0; // Objective of load OK
+            }
+            else if (remainingLoad > powerPlant.CalculatedPMax)
+            {
+                if (currentIndex + 1 < orderedPlantsGasAndTurboJet.Count)
+                {
+                    var nextPlant = orderedPlantsGasAndTurboJet[currentIndex + 1];
+                    var differential = remainingLoad - (powerPlant.CalculatedPMax + nextPlant.PMin);
+
+                    if (differential < 0)
+                    {
+                        plannedPower = (powerPlant.CalculatedPMax + differential);
+                        remainingLoad -= plannedPower;
+                        // If the remaining load is less than 0, use the current plant as it fulfills the role
+                    }
+                    else
+                    {
+                        plannedPower = powerPlant.CalculatedPMax;
+                        remainingLoad -= powerPlant.CalculatedPMax;
+                    }
+                }
+            }
+            return plannedPower;
+        }
         public List<PlannedOutput> GetPlannedOutput(List<PowerPlant> powerPlants, Fuel fuel, decimal plannedLoad)
         {
             var orderedPlantsWindTurbines = OrderWindTurbines(powerPlants, fuel);
@@ -109,41 +146,16 @@ namespace EngieChallenge.CORE.Services
                 var plannedOutputs = new List<PlannedOutput>();
                 var remainingLoad = plannedLoad;
 
-
                 foreach (var windTurbine in orderedPlantsWindTurbines.Where(p => p.Type == PowerPlantType.windturbine && p.CalculatedPMax != 0))
                 {
                     if (remainingLoad == 0)
-                        break; // Objectif de load OK
+                        break; // load OK
 
-                    // Y a t'il du vent pour utiliser la PmaxCalculé des windturbines ?
-                    decimal windPower = windTurbine.CalculatedPMax;
+                    decimal windPower = windTurbine.CalculatedPMax; //is there sufficient wind to turn on WindTurbines ?
+                    decimal totalNextWindPower = CalculateTotalNextWindPower(orderedPlantsWindTurbines, windTurbine, remainingLoad);
 
-                    decimal totalNextWindPower = 0;
-                    bool foundCurrentWindTurbine = false;
-
-                    foreach (var plant in orderedPlantsWindTurbines)
-                    {
-                        if (!foundCurrentWindTurbine)
-                        {
-                            if (plant == windTurbine)
-                            {
-                                foundCurrentWindTurbine = true;
-                            }
-                            continue; // Skip jusqu'à trouver le windturbine actuel
-                        }
-
-                        if (plant.Type == PowerPlantType.windturbine && windTurbine.CalculatedPMax <= remainingLoad)
-                        {
-                            totalNextWindPower += plant.CalculatedPMax;
-                        }
-                        else
-                        {
-                            break; //On arrête de rajouter du Power si la condition n'est pas atteinte
-                        }
-                    }
-
-                    // Si la puissance cumulé des prochains wind turbines + l'actuel ne dépasse pas le Remaining Load
-                    // Utiliser le windturbine à sa PMax Calculé
+                    //If the cumulative power of the next wind turbines plus the current one does not exceed the remaining load,
+                    //use the wind turbine at its calculated PMax.
                     if (windPower + totalNextWindPower <= remainingLoad && windPower >= windTurbine.PMin)
                     {
                         plannedOutputs.Add(new PlannedOutput { Name = windTurbine.Name, P = windPower });
@@ -151,11 +163,9 @@ namespace EngieChallenge.CORE.Services
                     }
                 }
 
-
                 for (int i = 0; i < orderedPlantsGasAndTurboJet.Count; i++)
                 {
                     var powerPlant = orderedPlantsGasAndTurboJet[i];
-
 
                     if (powerPlant.Type == PowerPlantType.windturbine)
                         continue;
@@ -163,39 +173,7 @@ namespace EngieChallenge.CORE.Services
                     if (remainingLoad == 0)
                         break; // Objective of load OK
 
-                    decimal plannedPower = 0;
-
-
-                    // Calcul du PW du Plant actuel
-                    if (powerPlant.PMin <= remainingLoad && remainingLoad <= powerPlant.CalculatedPMax)
-                    {
-                        plannedPower = remainingLoad;
-                        remainingLoad = 0; // Objectif de load OK
-                    }
-                    else if (remainingLoad > powerPlant.CalculatedPMax)
-                    {
-                        if (i + 1 < orderedPlantsGasAndTurboJet.Count)
-                        {
-                            var nextPlant = orderedPlantsGasAndTurboJet[i + 1];
-                            var differential = remainingLoad - (powerPlant.CalculatedPMax + nextPlant.PMin);
-
-
-                            if (differential < 0)
-                            {
-
-                                plannedPower = (powerPlant.CalculatedPMax + differential);
-                                remainingLoad -= plannedPower;
-                                // Si le load restant est moins que 0, utiliser le plant actuel car il remplit le role
-                            }
-                            else
-                            {
-                                plannedPower = powerPlant.CalculatedPMax;
-                                remainingLoad -= powerPlant.CalculatedPMax;
-                            }
-
-                        }
-                        
-                    }
+                    decimal plannedPower = CalculatePlannedPower(orderedPlantsGasAndTurboJet, i, remainingLoad);
 
                     if (plannedPower > 0)
                     {
@@ -203,13 +181,11 @@ namespace EngieChallenge.CORE.Services
                     }
                 }
 
-                // Si il reste du load et que les plants ne suffisent pas, logger Alerte
-                if (remainingLoad > 0)
+                if (remainingLoad > 0) // If remaining load is still not <= O then Log Alert
                 {
                     _Logger.LogWarning($"Unable to fulfill planned load. Remaining load: {remainingLoad}");
                     throw new PlannedOutputCalculationException("Unable to calculate planned output. Remaining load cannot be fulfilled.");
                 }
-
                 return plannedOutputs;
             }
             catch (Exception ex)

@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EngieChallenge.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4bc1d532bfd15de33bd6c69d30d8bc4e17ad5914")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+739ac574aac599b8cd2980f13e9e206917eff94c")]
 [assembly: System.Reflection.AssemblyProductAttribute("EngieChallenge.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EngieChallenge.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
