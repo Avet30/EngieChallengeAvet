@@ -11,6 +11,6 @@
     "\\EngieChallenge.CORE\\Interfaces",
     "\\EngieChallenge.CORE\\Services"
   ],
-  "SelectedNode": "\\EngieChallenge.API\\Program.cs",
+  "SelectedNode": "\\EngieChallenge.API\\Models\\Payload.cs",
   "PreviewInSolutionExplorer": false
 }
