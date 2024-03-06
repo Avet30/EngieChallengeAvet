@@ -371,3 +371,9 @@ FodyWeavers.xsd
 /EngieChallenge.CORE/obj/Debug/net6.0/EngieChallenge.CORE.assets.cache
 /EngieChallenge.CORE/obj/Debug/net6.0/EngieChallenge.CORE.csproj.FileListAbsolute.txt
 /.vs/EngieChallenge.API/v17/DocumentLayout.json
+/EngieChallenge.API/obj/*
+/EngieChallenge.CORE/obj/*
+/EngieChallenge.CORE/obj/Release/net6.0/EngieChallenge.CORE.AssemblyInfo.cs
+/EngieChallenge.CORE/obj/Release/net6.0/EngieChallenge.CORE.AssemblyInfoInputs.cache
+/.vs/EngieChallenge.API/FileContentIndex/a16d77da-defc-4d34-b3e9-e98b87ac1faa.vsidx
+/.vs/*
