@@ -1,10 +1,11 @@
-﻿using System;
+﻿using EngieChallenge.CORE.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EngieChallenge.CORE.Models
+namespace EngieChallenge.API.Models
 {
     public class Payload
     {
@@ -13,3 +14,5 @@ namespace EngieChallenge.CORE.Models
         public List<PowerPlant> Powerplants { get; set; }
     }
 }
+
+

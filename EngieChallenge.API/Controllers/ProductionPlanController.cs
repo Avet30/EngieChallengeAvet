@@ -1,4 +1,5 @@
-﻿using EngieChallenge.CORE.Exceptions;
+﻿using EngieChallenge.API.Models;
+using EngieChallenge.CORE.Exceptions;
 using EngieChallenge.CORE.Interfaces;
 using EngieChallenge.CORE.Models;
 using Microsoft.AspNetCore.Http;

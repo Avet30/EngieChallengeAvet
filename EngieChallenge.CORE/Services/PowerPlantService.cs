@@ -159,7 +159,7 @@ namespace EngieChallenge.CORE.Services
                     //use the wind turbine at its calculated PMax.
                     if (windPower + totalNextWindPower <= remainingLoad && windPower >= windTurbine.PMin)
                     {
-                        plannedOutputs.Add(new PlannedOutput { Name = windTurbine.Name, P = windPower });
+                        plannedOutputs.Add(new PlannedOutput { PowerPlantName = windTurbine.Name, PowerPlantPower = windPower });
                         remainingLoad -= windPower;
                     }
                 }
@@ -181,7 +181,7 @@ namespace EngieChallenge.CORE.Services
 
                     if (plannedPower > 0)
                     {
-                        plannedOutputs.Add(new PlannedOutput { Name = powerPlant.Name, P = plannedPower });
+                        plannedOutputs.Add(new PlannedOutput { PowerPlantName = powerPlant.Name, PowerPlantPower = plannedPower });
                     }
                 }
 
