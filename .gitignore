@@ -377,3 +377,6 @@ FodyWeavers.xsd
 /EngieChallenge.CORE/obj/Release/net6.0/EngieChallenge.CORE.AssemblyInfoInputs.cache
 /.vs/EngieChallenge.API/FileContentIndex/a16d77da-defc-4d34-b3e9-e98b87ac1faa.vsidx
 /.vs/*
+/.vs/EngieChallenge.API/v17/.futdcache.v2
+/.vs/ProjectEvaluation/engiechallenge.api.metadata.v7.bin
+/.vs/ProjectEvaluation/engiechallenge.api.projects.v7.bin
