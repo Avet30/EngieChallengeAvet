@@ -1,16 +1,16 @@
 {
   "ExpandedNodes": [
     "",
-    "\\EngieChallende.TESTS",
     "\\EngieChallenge.API",
     "\\EngieChallenge.API\\Controllers",
+    "\\EngieChallenge.API\\Models",
     "\\EngieChallenge.API\\Properties",
     "\\EngieChallenge.CORE",
+    "\\EngieChallenge.CORE\\Domain",
     "\\EngieChallenge.CORE\\Exceptions",
     "\\EngieChallenge.CORE\\Interfaces",
-    "\\EngieChallenge.CORE\\Models",
     "\\EngieChallenge.CORE\\Services"
   ],
-  "SelectedNode": "\\.gitignore",
+  "SelectedNode": "\\EngieChallenge.API\\Program.cs",
   "PreviewInSolutionExplorer": false
 }
