@@ -1,4 +1,4 @@
-﻿using EngieChallenge.CORE.Models.Enums;
+﻿using EngieChallenge.CORE.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace EngieChallenge.CORE.Models
+namespace EngieChallenge.CORE.Domain
 {
     public class PowerPlant
     {

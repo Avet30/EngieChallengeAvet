@@ -1,4 +1,4 @@
-﻿using EngieChallenge.CORE.Models;
+﻿using EngieChallenge.CORE.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;

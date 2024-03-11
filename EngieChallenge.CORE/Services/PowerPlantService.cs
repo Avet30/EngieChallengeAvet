@@ -1,7 +1,7 @@
-﻿using EngieChallenge.CORE.Exceptions;
+﻿using EngieChallenge.CORE.Domain;
+using EngieChallenge.CORE.Domain.Enums;
+using EngieChallenge.CORE.Exceptions;
 using EngieChallenge.CORE.Interfaces;
-using EngieChallenge.CORE.Models;
-using EngieChallenge.CORE.Models.Enums;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -22,13 +22,13 @@ namespace EngieChallenge.CORE.Services
         }
         public List<PowerPlant> CalculateRealCostAndPower(List<PowerPlant> powerPlants, Fuel fuel)
         {
-            try 
+            try
             {
-                    foreach (var plant in powerPlants)
-                    {
-                        plant.CalculatePMax(fuel);
-                        plant.CalculateFuelCost(fuel);
-                    }
+                foreach (var plant in powerPlants)
+                {
+                    plant.CalculatePMax(fuel);
+                    plant.CalculateFuelCost(fuel);
+                }
             }
             catch (Exception ex)
             {
@@ -37,155 +37,139 @@ namespace EngieChallenge.CORE.Services
             }
             return powerPlants;
         }
-        public List<PowerPlant> OrderWindTurbines(List<PowerPlant> powerPlants, Fuel fuel)
-        {
-            var realCostAndPowerProducedByPlants = CalculateRealCostAndPower(powerPlants, fuel);
 
-            try
-            {
-                var orderedPlants = realCostAndPowerProducedByPlants
-                    //Ordered By Efficiency
-                    .OrderByDescending(x => x.Efficiency)
-                    //If same efficiency then ordered by realFuelCost
-                    .ThenBy(x => x.CalculatedFuelCost)
-                    //If same efficiency and realFuelCost then ordered by realPMax
-                    .ThenByDescending(x => x.CalculatedPMax)
-                    .ToList();
-                return orderedPlants;
-            }
-            catch (Exception ex)
-            {
-                _Logger.LogError($"An error occurred while ordering power plants: {ex}");
-                throw ex;
-            }
-        }
-        public List<PowerPlant> OrderGasFiredAndTurboJet(List<PowerPlant> powerPlants, Fuel fuel)
+        private static decimal PlanLoadWithDifferential(List<PlannedOutput> plannedOutputs, ref decimal remainingLoad, PowerPlant powerPlant, decimal differential)
         {
-            var realCostAndPowerProducedByPlants = CalculateRealCostAndPower(powerPlants, fuel);
-            try
-            {
-                var orderedPlants = realCostAndPowerProducedByPlants
-                    //Ordered By CalculatedFuelCost
-                    .OrderBy(x => x.CalculatedFuelCost)
-                    //If same CalculatedFuelCost then ordered by CalculatedPMax
-                    .ThenBy(x => x.CalculatedPMax)
-                    .ToList();
-                return orderedPlants;
-            }
-            catch (Exception ex)
-            {
-                _Logger.LogError($"An error occurred while ordering power plants: {ex}");
-                throw ex;
-            }
+            decimal plannedPower = powerPlant.CalculatedPMax + differential;
+            remainingLoad -= plannedPower;
+            plannedOutputs.Add(new PlannedOutput { PowerPlantName = powerPlant.Name, PlantPower = plannedPower });
+            return plannedPower;
         }
-        private decimal CalculateTotalNextWindPower(List<PowerPlant> orderedPlantsWindTurbines, PowerPlant windTurbine, decimal remainingLoad)
-        {
-            decimal totalNextWindPower = 0;
-            bool foundCurrentWindTurbine = false;
 
-            foreach (var plant in orderedPlantsWindTurbines)
+        private static decimal PlanLoadWithRemaining(List<PlannedOutput> plannedOutputs, ref decimal remainingLoad, PowerPlant powerPlant)
+        {
+            decimal plannedPower = remainingLoad;
+            plannedOutputs.Add(new PlannedOutput { PowerPlantName = powerPlant.Name, PlantPower = plannedPower });
+            remainingLoad -= plannedPower;
+            return plannedPower;
+        }
+
+        private static decimal PlanLoad(List<PlannedOutput> plannedOutputs, ref decimal remainingLoad, PowerPlant powerPlant)
+        {
+            decimal plannedPower = Math.Min(remainingLoad, powerPlant.CalculatedPMax);
+            plannedOutputs.Add(new PlannedOutput { PowerPlantName = powerPlant.Name, PlantPower = plannedPower });
+            remainingLoad -= plannedPower;
+            return plannedPower;
+        }
+
+        private static decimal CalculatePowerOutputs(List<PlannedOutput> plannedOutputs, decimal remainingLoad, List<PowerPlant> sortedPlants, int i, PowerPlant powerPlant, out bool shouldContinue)
+        {
+            shouldContinue = false;
+
+            if (powerPlant.CalculatedPMax >= 0 && powerPlant.PMin <= remainingLoad)
             {
-                if (!foundCurrentWindTurbine)
+                if (powerPlant.Type == PowerPlantType.windturbine && powerPlant.CalculatedPMax > remainingLoad)
                 {
-                    if (plant == windTurbine)
-                    {
-                        foundCurrentWindTurbine = true;
-                    }
-                    continue; // Skip until the current windTurbine is found
+                    shouldContinue = true;
+                    return remainingLoad;
                 }
 
-                if (plant.Type == PowerPlantType.windturbine && windTurbine.CalculatedPMax <= remainingLoad)
+                PowerPlant nextPlant = null;
+                if (i + 1 < sortedPlants.Count)
                 {
-                    totalNextWindPower += plant.CalculatedPMax;
+                    nextPlant = sortedPlants[i + 1];
                 }
-                else
-                {
-                    break; // Stop adding power if the condition is not met
-                }
-            }
-            return totalNextWindPower;
-        }
-        private (decimal plannedPower, decimal updatedRemainingLoad) CalculatePlannedPower(List<PowerPlant> orderedPlantsGasAndTurboJet, int currentIndex, decimal remainingLoad)
-        {
-            var powerPlant = orderedPlantsGasAndTurboJet[currentIndex];
-            decimal plannedPower = 0;
-            decimal updatedRemainingLoad = remainingLoad; // Initialize updatedRemainingLoad with remainingLoad
 
-            if (powerPlant.PMin <= remainingLoad && remainingLoad <= powerPlant.CalculatedPMax)
-            {
-                plannedPower = remainingLoad;
-                updatedRemainingLoad = 0; // Objective of load OK
-            }
-            else if (remainingLoad > powerPlant.CalculatedPMax)
-            {
-                if (currentIndex + 1 < orderedPlantsGasAndTurboJet.Count)
+                if (nextPlant != null && nextPlant.PMin <= remainingLoad)
                 {
-                    var nextPlant = orderedPlantsGasAndTurboJet[currentIndex + 1];
                     var differential = remainingLoad - (powerPlant.CalculatedPMax + nextPlant.PMin);
 
                     if (differential < 0)
                     {
-                        plannedPower = (powerPlant.CalculatedPMax + differential);
-                        updatedRemainingLoad -= plannedPower;
-                        // If the remaining load is less than 0, use the current plant as it fulfills the role
+                        if (powerPlant.PMin <= remainingLoad && remainingLoad <= powerPlant.CalculatedPMax)
+                        {
+                            PlanLoadWithRemaining(plannedOutputs, ref remainingLoad, powerPlant);
+
+                            if (remainingLoad == 0)
+                            {
+                                shouldContinue = true;
+                                return remainingLoad;
+                            }
+                        }
+                        else if (powerPlant.CalculatedPMax <= remainingLoad && remainingLoad <= nextPlant.PMin)
+                        {
+                            if (nextPlant.PMin < remainingLoad - powerPlant.CalculatedPMax)
+                            {
+                                if (remainingLoad - powerPlant.CalculatedPMax > 0)
+                                {
+                                    PlanLoad(plannedOutputs, ref remainingLoad, powerPlant);
+                                }
+                                else
+                                {
+                                    PlanLoadWithDifferential(plannedOutputs, ref remainingLoad, powerPlant, differential);
+                                }
+                            }
+                            else
+                            {
+                                PlanLoad(plannedOutputs, ref remainingLoad, powerPlant);
+                            }
+                        }
+                        else if (remainingLoad - nextPlant.PMin > (remainingLoad - powerPlant.CalculatedPMax + nextPlant.PMin))
+                        {
+                            PlanLoadWithDifferential(plannedOutputs, ref remainingLoad, powerPlant, differential);
+                        }
                     }
                     else
                     {
-                        plannedPower = powerPlant.CalculatedPMax;
-                        updatedRemainingLoad -= powerPlant.CalculatedPMax;
+                        PlanLoad(plannedOutputs, ref remainingLoad, powerPlant);
+                    }
+                }
+                else
+                {
+                    if (powerPlant.PMin <= remainingLoad && remainingLoad <= powerPlant.CalculatedPMax)
+                    {
+                        PlanLoadWithRemaining(plannedOutputs, ref remainingLoad, powerPlant);
+
+                        if (remainingLoad == 0)
+                        {
+                            shouldContinue = true;
+                            return remainingLoad;
+                        }
+                    }
+                    else
+                    {
+                        PlanLoad(plannedOutputs, ref remainingLoad, powerPlant);
                     }
                 }
             }
-            return (plannedPower, updatedRemainingLoad);
+            return remainingLoad;
         }
-        public List<PlannedOutput> GetPlannedOutput(List<PowerPlant> powerPlants, Fuel fuel, decimal plannedLoad)
+
+        public List<PlannedOutput> GetProductionPlan(List<PowerPlant> powerPlants, Fuel fuel, decimal plannedLoad)
         {
-            var orderedPlantsWindTurbines = OrderWindTurbines(powerPlants, fuel);
-            var orderedPlantsGasAndTurboJet = OrderGasFiredAndTurboJet(powerPlants, fuel);
+            var calculatedPlants = CalculateRealCostAndPower(powerPlants, fuel);
             try
             {
                 var plannedOutputs = new List<PlannedOutput>();
                 var remainingLoad = plannedLoad;
 
-                foreach (var windTurbine in orderedPlantsWindTurbines.Where(p => p.Type == PowerPlantType.windturbine && p.CalculatedPMax != 0))
+                // Sort calculatedPlants by CalculatedFuelCost
+                var sortedPlants = calculatedPlants.OrderBy(p => p.CalculatedFuelCost).ToList();
+
+                for (int i = 0; i < sortedPlants.Count; i++)
                 {
+                    var powerPlant = sortedPlants[i];
+
                     if (remainingLoad == 0)
                         break; // load OK
 
-                    decimal windPower = windTurbine.CalculatedPMax; //is there sufficient wind to turn on WindTurbines ?
-                    decimal totalNextWindPower = CalculateTotalNextWindPower(orderedPlantsWindTurbines, windTurbine, remainingLoad);
+                    bool shouldContinue;
+                    remainingLoad = CalculatePowerOutputs(plannedOutputs, remainingLoad, sortedPlants, i, powerPlant, out shouldContinue);
 
-                    //If the cumulative power of the next wind turbines plus the current one does not exceed the remaining load,
-                    //use the wind turbine at its calculated PMax.
-                    if (windPower + totalNextWindPower <= remainingLoad && windPower >= windTurbine.PMin)
-                    {
-                        plannedOutputs.Add(new PlannedOutput { PowerPlantName = windTurbine.Name, PowerPlantPower = windPower });
-                        remainingLoad -= windPower;
-                    }
-                }
-
-                for (int i = 0; i < orderedPlantsGasAndTurboJet.Count; i++)
-                {
-                    var powerPlant = orderedPlantsGasAndTurboJet[i];
-
-                    if (powerPlant.Type == PowerPlantType.windturbine)
+                    if (shouldContinue)
                         continue;
-
-                    if (remainingLoad == 0)
-                        break; // Objective of load OK
-
-                    //decimal plannedPower = CalculatePlannedPower(orderedPlantsGasAndTurboJet, i, remainingLoad);
-                    (decimal plannedPower, decimal updatedRemainingLoad) = CalculatePlannedPower(orderedPlantsGasAndTurboJet, i, remainingLoad);
-
-                    remainingLoad = updatedRemainingLoad; // Update remainingLoad with the updatedRemainingLoad from the method
-
-                    if (plannedPower > 0)
-                    {
-                        plannedOutputs.Add(new PlannedOutput { PowerPlantName = powerPlant.Name, PowerPlantPower = plannedPower });
-                    }
                 }
-
-                if (remainingLoad > 0) // If remaining load is still not <= O then Log Alert
+                if (remainingLoad > 0)
                 {
                     _Logger.LogWarning($"Unable to fulfill planned load. Remaining load: {remainingLoad}");
                     throw new PlannedOutputCalculationException("Unable to calculate planned output. Remaining load cannot be fulfilled.");
@@ -194,9 +178,8 @@ namespace EngieChallenge.CORE.Services
             }
             catch (Exception ex)
             {
-                // Log the exception
                 _Logger.LogError($"An error occurred while calculating planned output: {ex}");
-                throw new PlannedOutputCalculationException("Unable to calculate planned output. Remaining load cannot be fulfilled.");
+                throw new PlannedOutputCalculationException("Unable to calculate planned output. An error occurred.");
             }
         }
     }

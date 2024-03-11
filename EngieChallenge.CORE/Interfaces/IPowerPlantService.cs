@@ -1,9 +1,11 @@
-﻿using EngieChallenge.CORE.Models;
+﻿using EngieChallenge.CORE.Domain;
 
 namespace EngieChallenge.CORE.Interfaces
 {
     public interface IPowerPlantService
     {
-        List<PlannedOutput> GetPlannedOutput(List<PowerPlant> powerPlants, Fuel fuel, decimal plannedLoad);
+        List<PlannedOutput> GetProductionPlan(List<PowerPlant> powerPlants, Fuel fuel, decimal plannedLoad);
+
+       
     }
 }

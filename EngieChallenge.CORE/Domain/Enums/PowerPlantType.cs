@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EngieChallenge.CORE.Models.Enums
+namespace EngieChallenge.CORE.Domain.Enums
 {
     public enum PowerPlantType
     {

@@ -1,3 +1,4 @@
+using EngieChallenge.CORE;
 using EngieChallenge.CORE.Interfaces;
 using EngieChallenge.CORE.Services;
 
@@ -12,11 +13,13 @@ namespace EngieChallenge.API
             // Add services to the container.
 
             builder.Services.AddControllers();
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddLogging();
+            
             builder.Services.AddScoped<IPowerPlantService, PowerPlantService>();
             
 
