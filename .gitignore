@@ -380,3 +380,11 @@ FodyWeavers.xsd
 /.vs/EngieChallenge.API/v17/.futdcache.v2
 /.vs/ProjectEvaluation/engiechallenge.api.metadata.v7.bin
 /.vs/ProjectEvaluation/engiechallenge.api.projects.v7.bin
+/.vs/EngieChallenge.API/DesignTimeBuild/.dtbcache.v2
+/.vs/EngieChallenge.API/FileContentIndex/335b3aa8-9362-4cb4-adac-aeabe3d2d2f6.vsidx
+/.vs/EngieChallenge.API/v17/TestStore/0/000.testlog
+/.vs/EngieChallenge.API/v17/TestStore/0/testlog.manifest
+/.vs/VSWorkspaceState.json
+/EngieChallende.TESTS/EngieChallende.TESTS.csproj
+/EngieChallende.TESTS/PowerPlantServiceTests.cs
+/EngieChallende.TESTS/Usings.cs
