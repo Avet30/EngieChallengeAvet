@@ -18,7 +18,6 @@ namespace EngieChallenge.CORE.Domain
         public decimal PMax { get; set; }
         public decimal CalculatedPMax { get; private set; }
         public decimal CalculatedFuelCost { get; private set; }
-
         public void CalculatePMax(Fuel fuel)
         {
             if (Type == PowerPlantType.windturbine)
@@ -30,7 +29,6 @@ namespace EngieChallenge.CORE.Domain
                 CalculatedPMax = PMax;
             }
         }
-
         public void CalculateFuelCost(Fuel fuel)
         {
             if (Type == PowerPlantType.windturbine)

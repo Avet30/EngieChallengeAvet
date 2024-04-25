@@ -26,7 +26,6 @@ namespace EngieChallenge.API.Controllers
         {          
             try
             {
-                // Call the service method to calculate planned output
                 var plannedOutput = _powerPlantService.GetProductionPlan(request.Powerplants, request.Fuels, request.Load);
 
                 return Ok(plannedOutput);
