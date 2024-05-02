@@ -18,7 +18,7 @@ namespace EngieChallenge.CORE.Services
         {
             _Logger = logger;
         }
-        public List<PowerPlant> CalculateRealCostAndPower(List<PowerPlant> powerPlants, Fuel fuel)
+        public List<PowerPlant> ComputeRealCostAndPower(List<PowerPlant> powerPlants, Fuel fuel)
         {
             try
             {
@@ -36,122 +36,14 @@ namespace EngieChallenge.CORE.Services
             return powerPlants;
         }
 
-        private static decimal PlanLoadWithDifferential(List<PlannedOutput> plannedOutputs, ref decimal remainingLoad, PowerPlant powerPlant, decimal differential)
-        {
-            decimal plannedPower = powerPlant.CalculatedPMax + differential;
-            remainingLoad -= plannedPower;
-            plannedOutputs.Add(new PlannedOutput { PowerPlantName = powerPlant.Name, PlantPower = plannedPower });
-            return plannedPower;
-        }
-
-        private static decimal PlanLoadWithRemaining(List<PlannedOutput> plannedOutputs, ref decimal remainingLoad, PowerPlant powerPlant)
-        {
-            decimal plannedPower = remainingLoad;
-            plannedOutputs.Add(new PlannedOutput { PowerPlantName = powerPlant.Name, PlantPower = plannedPower });
-            remainingLoad -= plannedPower;
-            return plannedPower;
-        }
-
-        private static decimal PlanLoad(List<PlannedOutput> plannedOutputs, ref decimal remainingLoad, PowerPlant powerPlant)
-        {
-            decimal plannedPower = Math.Min(remainingLoad, powerPlant.CalculatedPMax);
-            plannedOutputs.Add(new PlannedOutput { PowerPlantName = powerPlant.Name, PlantPower = plannedPower });
-            remainingLoad -= plannedPower;
-            return plannedPower;
-        }
-
-        private static decimal CalculatePowerOutputs(List<PlannedOutput> plannedOutputs, decimal remainingLoad, List<PowerPlant> sortedPlants, int i, PowerPlant powerPlant, out bool shouldContinue)
-        {
-            shouldContinue = false;
-
-            if (powerPlant.CalculatedPMax >= 0 && powerPlant.PMin <= remainingLoad)
-            {
-                if (powerPlant.Type == PowerPlantType.windturbine && powerPlant.CalculatedPMax > remainingLoad)
-                {
-                    shouldContinue = true;
-                    return remainingLoad;
-                }
-
-                PowerPlant nextPlant = null;
-                if (i + 1 < sortedPlants.Count)
-                {
-                    nextPlant = sortedPlants[i + 1];
-                }
-
-                if (nextPlant != null && nextPlant.PMin <= remainingLoad)
-                {
-                    var differential = remainingLoad - (powerPlant.CalculatedPMax + nextPlant.PMin);
-
-                    if (differential < 0)
-                    {
-                        if (powerPlant.PMin <= remainingLoad && remainingLoad <= powerPlant.CalculatedPMax)
-                        {
-                            PlanLoadWithRemaining(plannedOutputs, ref remainingLoad, powerPlant);
-
-                            if (remainingLoad == 0)
-                            {
-                                shouldContinue = true;
-                                return remainingLoad;
-                            }
-                        }
-                        else if (powerPlant.CalculatedPMax <= remainingLoad && remainingLoad <= nextPlant.PMin)
-                        {
-                            if (nextPlant.PMin < remainingLoad - powerPlant.CalculatedPMax)
-                            {
-                                if (remainingLoad - powerPlant.CalculatedPMax > 0)
-                                {
-                                    PlanLoad(plannedOutputs, ref remainingLoad, powerPlant);
-                                }
-                                else
-                                {
-                                    PlanLoadWithDifferential(plannedOutputs, ref remainingLoad, powerPlant, differential);
-                                }
-                            }
-                            else
-                            {
-                                PlanLoad(plannedOutputs, ref remainingLoad, powerPlant);
-                            }
-                        }
-                        else if (remainingLoad - nextPlant.PMin > (remainingLoad - powerPlant.CalculatedPMax + nextPlant.PMin))
-                        {
-                            PlanLoadWithDifferential(plannedOutputs, ref remainingLoad, powerPlant, differential);
-                        }
-                    }
-                    else
-                    {
-                        PlanLoad(plannedOutputs, ref remainingLoad, powerPlant);
-                    }
-                }
-                else
-                {
-                    if (powerPlant.PMin <= remainingLoad && remainingLoad <= powerPlant.CalculatedPMax)
-                    {
-                        PlanLoadWithRemaining(plannedOutputs, ref remainingLoad, powerPlant);
-
-                        if (remainingLoad == 0)
-                        {
-                            shouldContinue = true;
-                            return remainingLoad;
-                        }
-                    }
-                    else
-                    {
-                        PlanLoad(plannedOutputs, ref remainingLoad, powerPlant);
-                    }
-                }
-            }
-            return remainingLoad;
-        }
-
         public List<PlannedOutput> GetProductionPlan(List<PowerPlant> powerPlants, Fuel fuel, decimal plannedLoad)
         {
-            var calculatedPlants = CalculateRealCostAndPower(powerPlants, fuel);
+            var calculatedPlants = ComputeRealCostAndPower(powerPlants, fuel);
             try
             {
                 var plannedOutputs = new List<PlannedOutput>();
                 var remainingLoad = plannedLoad;
 
-                // Sort calculatedPlants by CalculatedFuelCost
                 var sortedPlants = calculatedPlants.OrderBy(p => p.CalculatedFuelCost).ToList();
 
 
@@ -162,12 +54,10 @@ namespace EngieChallenge.CORE.Services
                     if (remainingLoad == 0)
                         break; // load OK
 
-
                     if(powerPlant.PMin > remainingLoad || powerPlant.CalculatedPMax == 0)
                     {
                         continue;
                     }
-
 
                     var plannedPower = remainingLoad - powerPlant.CalculatedPMax;
                     remainingLoad = plannedPower;
@@ -177,7 +67,7 @@ namespace EngieChallenge.CORE.Services
 
 
                     if (remainingLoad == 0)
-                        break; // load
+                        break; // load OK
                 }
 
                 if (remainingLoad > 0)

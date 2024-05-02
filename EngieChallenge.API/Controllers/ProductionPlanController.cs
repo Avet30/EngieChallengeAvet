@@ -22,7 +22,7 @@ namespace EngieChallenge.API.Controllers
         }
 
         [HttpPost]
-        public IActionResult Calculate([FromBody] Payload request)
+        public IActionResult Compute([FromBody] Payload request)
         {          
             try
             {
