@@ -4,7 +4,7 @@ using EngieChallenge.CORE.Domain.Enums;
 public class PowerPlantDto
 {
     [JsonPropertyName("name")]
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
     [JsonPropertyName("type")]
     [JsonConverter(typeof(JsonStringEnumConverter))]

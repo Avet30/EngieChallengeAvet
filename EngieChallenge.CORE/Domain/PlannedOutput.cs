@@ -2,7 +2,7 @@
 {
     public class PlannedOutput
     {
-        public string PowerPlantName { get; set; }
+        public string? PowerPlantName { get; set; }
         public decimal PlantPower { get; set; }
     }
 }

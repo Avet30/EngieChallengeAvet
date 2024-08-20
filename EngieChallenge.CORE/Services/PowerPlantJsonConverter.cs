@@ -1,7 +1,5 @@
-﻿using System;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using EngieChallenge.CORE.Domain;
 using EngieChallenge.CORE.Domain.Enums;
 
 public class PowerPlantJsonConverter : JsonConverter<PowerPlant>
