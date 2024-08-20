@@ -56,6 +56,7 @@ namespace EngieChallenge.CORE.Services
             for (int i = 0; i < sortedPlants.Count; i++)
             {
                 var powerPlant = sortedPlants[i];
+                
 
                 if (remainingLoad <= 0)
                     break;
@@ -76,6 +77,14 @@ namespace EngieChallenge.CORE.Services
 
                 // Plan preliminary load
                 var preliminaryPowerOutput = Math.Min(remainingLoad, powerPlant.CalculatedPMax);
+
+                
+                if(preliminaryPowerOutput == remainingLoad && powerPlant.PMin < remainingLoad)
+                {
+                    PlanLoad(plannedOutputs, ref remainingLoad, powerPlant, preliminaryPowerOutput);
+                    usedPlants.Add(powerPlant.Name);
+                    break;
+                }
 
                 if (i < sortedPlants.Count - 1)
                 {
@@ -104,7 +113,7 @@ namespace EngieChallenge.CORE.Services
                 decimal remainder = remainingLoad;
                 foreach (var powerPlant in sortedPlants)
                 {
-                    if (!usedPlants.Contains(powerPlant.Name) &&
+                    if (usedPlants.Contains(powerPlant.Name) &&
                         powerPlant.PMin <= remainder && remainder <= powerPlant.CalculatedPMax)
                     {
                         PlanLoad(plannedOutputs, ref remainder, powerPlant, remainder);
@@ -125,10 +134,6 @@ namespace EngieChallenge.CORE.Services
             return plannedOutputs;
         }
     }
-
-
-
-
 }
 
 
