@@ -1,48 +1,55 @@
-﻿using EngieChallenge.CORE.Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using EngieChallenge.CORE.Domain;
 
-namespace EngieChallenge.CORE.Domain
+
+public abstract class PowerPlant
 {
-    public class PowerPlant
+    public string Name { get; set; }
+    public decimal Efficiency { get; set; }
+    public decimal PMin { get; set; }
+    public decimal PMax { get; set; }
+    public decimal CalculatedPMax { get; protected set; }
+    public decimal CalculatedFuelCost { get; protected set; }
+
+    public abstract void CalculatePMax(Fuel fuel);
+    public abstract void CalculateFuelCost(Fuel fuel);
+}
+
+public class WindTurbine : PowerPlant
+{
+    public override void CalculatePMax(Fuel fuel)
     {
-        public string Name { get; set; }
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public PowerPlantType Type { get; set; }
-        public decimal Efficiency { get; set; }
-        public decimal PMin { get; set; }
-        public decimal PMax { get; set; }
-        public decimal CalculatedPMax { get; private set; }
-        public decimal CalculatedFuelCost { get; private set; }
-        public void CalculatePMax(Fuel fuel)
-        {
-            if (Type == PowerPlantType.windturbine)
-            {
-                CalculatedPMax = PMax / 100.0M * fuel.Wind;
-            }
-            else
-            {
-                CalculatedPMax = PMax;
-            }
-        }
-        public void CalculateFuelCost(Fuel fuel)
-        {
-            if (Type == PowerPlantType.windturbine)
-            {
-                CalculatedFuelCost = 0.0M;
-            }
-            else if (Type == PowerPlantType.gasfired)
-            {
-                CalculatedFuelCost = fuel.Gas / Efficiency;
-            }
-            else // Assuming default is Turbojet
-            {
-                CalculatedFuelCost = fuel.Kerosine / Efficiency;
-            }
-        }
+        CalculatedPMax = PMax * (fuel.Wind / 100.0M);
+    }
+
+    public override void CalculateFuelCost(Fuel fuel)
+    {
+        CalculatedFuelCost = 0.0M;
     }
 }
+
+public class GasFired : PowerPlant
+{
+    public override void CalculatePMax(Fuel fuel)
+    {
+        CalculatedPMax = PMax;
+    }
+
+    public override void CalculateFuelCost(Fuel fuel)
+    {
+        CalculatedFuelCost = fuel.Gas / Efficiency;
+    }
+}
+
+public class TurboJet : PowerPlant
+{
+    public override void CalculatePMax(Fuel fuel)
+    {
+        CalculatedPMax = PMax;
+    }
+
+    public override void CalculateFuelCost(Fuel fuel)
+    {
+        CalculatedFuelCost = fuel.Kerosine / Efficiency;
+    }
+}  
+
