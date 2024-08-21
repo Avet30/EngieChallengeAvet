@@ -16,7 +16,7 @@ namespace EngieChallenge.CORE.Services
 
         public List<PlannedOutput> GetProductionPlan(List<PowerPlant> powerPlants, Fuel fuel, decimal plannedLoad)
         {
-            PowerPlant.CalculateAllValues(powerPlants, fuel);
+            PowerPlant.ComputeAllValues(powerPlants, fuel);
 
             var plannedOutputs = powerPlants
                 .Select(p => new PlannedOutput
