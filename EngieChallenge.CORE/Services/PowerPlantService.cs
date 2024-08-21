@@ -16,7 +16,7 @@ namespace EngieChallenge.CORE.Services
 
         public List<PlannedOutput> GetProductionPlan(List<PowerPlant> powerPlants, Fuel fuel, decimal plannedLoad)
         {
-            var calculatedPlants = CalculateRealCostAndPower(powerPlants, fuel);
+            PowerPlant.CalculateAllValues(powerPlants, fuel);
 
             // Initialize plannedOutputs with all power plants, defaulting power to 0.0
             var plannedOutputs = powerPlants
@@ -27,7 +27,7 @@ namespace EngieChallenge.CORE.Services
                 })
                 .ToList();
 
-            var sortedPlants = calculatedPlants
+            var sortedPlants = powerPlants
                 .OrderBy(p => p.CalculatedFuelCost)
                 .ThenByDescending(p => p.PMax)
                 .ToList();
@@ -86,7 +86,7 @@ namespace EngieChallenge.CORE.Services
                 // Check if this combination meets the load and is cheaper
                 if (testLoad <= 0)
                 {
-                    decimal totalCost = testOutputs.Sum(p => p.PlantPower * calculatedPlants.First(pp => pp.Name == p.PowerPlantName).CalculatedFuelCost);
+                    decimal totalCost = testOutputs.Sum(p => p.PlantPower * powerPlants.First(pp => pp.Name == p.PowerPlantName).CalculatedFuelCost);
 
                     if (totalCost < lowestCost)
                     {
@@ -114,9 +114,6 @@ namespace EngieChallenge.CORE.Services
             remainingLoad -= plannedPower;
         }
 
-
-
-
         private void HandleWindTurbine(List<PlannedOutput> plannedOutputs, ref decimal remainingLoad, PowerPlant powerPlant, HashSet<string> usedPlants)
         {
             var windPowerOutput = powerPlant.CalculatedPMax;
@@ -141,17 +138,6 @@ namespace EngieChallenge.CORE.Services
                 }
             }
             return preliminaryPowerOutput;
-        }
-
-
-        private List<PowerPlant> CalculateRealCostAndPower(List<PowerPlant> powerPlants, Fuel fuel)
-        {
-            powerPlants.ForEach(p =>
-            {
-                p.CalculatePMax(fuel);
-                p.CalculateFuelCost(fuel);
-            });
-            return powerPlants;
         }
     }
 }

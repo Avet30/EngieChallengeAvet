@@ -11,6 +11,20 @@ public abstract class PowerPlant
     public decimal CalculatedFuelCost { get; protected set; }
     public abstract void CalculatePMax(Fuel fuel);
     public abstract void CalculateFuelCost(Fuel fuel);
+
+    public void CalculateValues(Fuel fuel)
+    {
+        CalculatePMax(fuel);
+        CalculateFuelCost(fuel);
+    }
+
+    public static void CalculateAllValues(IEnumerable<PowerPlant> plants, Fuel fuel)
+    {
+        foreach (var plant in plants)
+        {
+            plant.CalculateValues(fuel);
+        }
+    }
 }
 
 public class WindTurbine : PowerPlant
