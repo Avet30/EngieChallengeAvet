@@ -1,10 +1,7 @@
 ﻿using EngieChallenge.API.Models;
-using EngieChallenge.CORE.Exceptions;
+using EngieChallenge.CORE.Domain.Exceptions;
 using EngieChallenge.CORE.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
 
 namespace EngieChallenge.API.Controllers
 {
@@ -23,7 +20,7 @@ namespace EngieChallenge.API.Controllers
 
         [HttpPost]
         public IActionResult Compute([FromBody] Payload request)
-        {          
+        {
             try
             {
                 var plannedOutput = _powerPlantService.GetProductionPlan(request.Powerplants, request.Fuels, request.Load);

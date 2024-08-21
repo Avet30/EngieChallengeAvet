@@ -1,4 +1,3 @@
-using EngieChallenge.CORE;
 using EngieChallenge.CORE.Interfaces;
 using EngieChallenge.CORE.Services;
 using System.Text.Json.Serialization;
@@ -28,10 +27,9 @@ namespace EngieChallenge.API
             
             builder.Services.AddScoped<IPowerPlantService, PowerPlantService>();
             
-
-
-
             var app = builder.Build();
+
+            //app.UseMiddleware<ExceptionHandlerMiddleware>();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -39,6 +37,8 @@ namespace EngieChallenge.API
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            
 
             app.UseHttpsRedirection();
 

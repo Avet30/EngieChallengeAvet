@@ -1,5 +1,5 @@
 ﻿using EngieChallenge.CORE.Domain;
-using EngieChallenge.CORE.Exceptions;
+using EngieChallenge.CORE.Domain.Exceptions;
 using EngieChallenge.CORE.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -14,11 +14,52 @@ namespace EngieChallenge.CORE.Services
             _logger = logger;
         }
 
-        public List<PlannedOutput> GetProductionPlan(List<PowerPlant> powerPlants, Fuel fuel, decimal plannedLoad)
-        {
-            PowerPlant.ComputeAllValues(powerPlants, fuel);
+        public List<PlannedOutput> GetProductionPlan(PowerPlant[] powerPlants, Fuel fuel, decimal plannedLoad)
+        { 
+            var computedPlants = ComputeRealCostAndPower(powerPlants, fuel);
 
-            var plannedOutputs = powerPlants
+            //Sort plants
+            var sortedPlants = computedPlants
+                .OrderBy(p => p.CalculatedFuelCost)
+                .ThenByDescending(p => p.PMax)
+                .ToList();
+
+            //Generate all plant results
+            var results = sortedPlants
+                .Select(p => GeneratePlanResult(sortedPlants, plannedLoad, p))
+                .ToList();
+            results.Add(GeneratePlanResult(sortedPlants, plannedLoad, null)); // Calculate without ignoring any plant
+
+            //Find best result
+            var bestResult = results
+                .Where(r => r.RemainingLoad <= 0) // Ensure only valid results are considered
+                .OrderBy(r => r.TotalCost)        // Find the one with the lowest cost
+                .FirstOrDefault();
+
+            if (bestResult != null)
+            {
+                // Initialize plannedOutputs with all power plants, including those with 0 power
+                var finalOutputs = sortedPlants
+                    .Select(p => new PlannedOutput
+                    {
+                        PowerPlantName = p.Name,
+                        PlantPower = bestResult.PlannedOutputs?.FirstOrDefault(po => po.PowerPlantName == p.Name)?.PlantPower ?? 0.0M
+                    })
+                    .OrderByDescending(po => po.PlantPower)
+                    .ToList();
+
+                return finalOutputs;
+            }
+
+            // If no valid plan was found, throw an exception
+            _logger.LogWarning($"Unable to fulfill planned load. Remaining load: {plannedLoad}");
+            throw new PlannedOutputCalculationException("Unable to calculate planned output. Remaining load cannot be fulfilled.");
+        }
+
+        private PlanScenario GeneratePlanResult(List<PowerPlant> sortedPlants, decimal plannedLoad, PowerPlant elementToIgnore)
+        {
+            // If plannedOutputs is null, initialize it
+            var plannedOutputs = sortedPlants
                 .Select(p => new PlannedOutput
                 {
                     PowerPlantName = p.Name,
@@ -26,84 +67,55 @@ namespace EngieChallenge.CORE.Services
                 })
                 .ToList();
 
-            var sortedPlants = powerPlants
-                .OrderBy(p => p.CalculatedFuelCost)
-                .ThenByDescending(p => p.PMax)
-                .ToList();
+            decimal remainingLoad = plannedLoad;
 
-            List<PlannedOutput> bestPlan = null;
-            decimal lowestCost = decimal.MaxValue;
-
-            for (int i = 0; i < sortedPlants.Count; i++)
+            foreach (var powerPlant in sortedPlants)
             {
-                var testOutputs = plannedOutputs.Select(po => new PlannedOutput
+                if (powerPlant == elementToIgnore)
+                    continue;
+
+                if (remainingLoad <= 0)
+                    break;
+
+                decimal preliminaryPowerOutput;
+
+                if (powerPlant is WindTurbine)
                 {
-                    PowerPlantName = po.PowerPlantName,
-                    PlantPower = 0.0M
-                }).ToList();
-
-                decimal testLoad = plannedLoad;
-
-                for (int j = i; j < sortedPlants.Count; j++)
-                {
-                    var powerPlant = sortedPlants[j];
-                    if (testLoad <= 0)
-                        break;
-
-                    decimal preliminaryPowerOutput;
-
-                    if (powerPlant is WindTurbine)
+                    preliminaryPowerOutput = powerPlant.CalculatedPMax;
+                    if (remainingLoad >= preliminaryPowerOutput)
                     {
-                        preliminaryPowerOutput = powerPlant.CalculatedPMax;
-                        if (testLoad >= preliminaryPowerOutput)
-                        {
-                            testOutputs = PlanLoad(testOutputs, testLoad, powerPlant, preliminaryPowerOutput);
-                            testLoad -= preliminaryPowerOutput;
-                        }
-                        continue;
+                        PlanLoad(plannedOutputs, remainingLoad, powerPlant, preliminaryPowerOutput);
+                        remainingLoad -= preliminaryPowerOutput;
                     }
-
-                    preliminaryPowerOutput = Math.Min(testLoad, powerPlant.CalculatedPMax);
-
-                    if (preliminaryPowerOutput == testLoad && powerPlant.PMin < testLoad)
-                    {
-                        testOutputs = PlanLoad(testOutputs, testLoad, powerPlant, preliminaryPowerOutput);
-                        testLoad -= preliminaryPowerOutput;
-                        break;
-                    }
-
-                    preliminaryPowerOutput = AdjustForNextPlant(sortedPlants, j, testLoad, preliminaryPowerOutput, powerPlant);
-
-                    if (preliminaryPowerOutput >= powerPlant.PMin)
-                    {
-                        testOutputs = PlanLoad(testOutputs, testLoad, powerPlant, preliminaryPowerOutput);
-                        testLoad -= preliminaryPowerOutput;
-                    }
+                    continue;
                 }
 
-                if (testLoad <= 0)
-                {
-                    decimal totalCost = testOutputs.Sum(p => p.PlantPower * powerPlants.First(pp => pp.Name == p.PowerPlantName).CalculatedFuelCost);
+                preliminaryPowerOutput = Math.Min(remainingLoad, powerPlant.CalculatedPMax);
 
-                    if (totalCost < lowestCost)
-                    {
-                        bestPlan = testOutputs;
-                        lowestCost = totalCost;
-                    }
+                if (preliminaryPowerOutput == remainingLoad && powerPlant.PMin < remainingLoad)
+                {
+                    PlanLoad(plannedOutputs, remainingLoad, powerPlant, preliminaryPowerOutput);
+                    remainingLoad -= preliminaryPowerOutput;
+                    break;
+                }
+
+                preliminaryPowerOutput = AdjustForNextPlant(sortedPlants, sortedPlants.IndexOf(powerPlant), remainingLoad, preliminaryPowerOutput, powerPlant);
+
+                if (preliminaryPowerOutput >= powerPlant.PMin)
+                {
+                    PlanLoad(plannedOutputs, remainingLoad, powerPlant, preliminaryPowerOutput);
+                    remainingLoad -= preliminaryPowerOutput;
                 }
             }
 
-            if (bestPlan != null)
+            decimal totalCost = plannedOutputs.Sum(p => p.PlantPower * sortedPlants.First(pp => pp.Name == p.PowerPlantName).CalculatedFuelCost);
+
+            return new PlanScenario
             {
-                var sortedBestPlan = bestPlan
-                    .OrderByDescending(po => po.PlantPower)
-                    .ToList();
-
-                return sortedBestPlan;
-            }
-
-            _logger.LogWarning($"Unable to fulfill planned load. Remaining load: {plannedLoad}");
-            throw new PlannedOutputCalculationException("Unable to calculate planned output. Remaining load cannot be fulfilled.");
+                PlannedOutputs = plannedOutputs,
+                TotalCost = totalCost,
+                RemainingLoad = remainingLoad
+            };
         }
 
         private List<PlannedOutput> PlanLoad(List<PlannedOutput> plannedOutputs, decimal remainingLoad, PowerPlant powerPlant, decimal plannedPower)
@@ -112,19 +124,6 @@ namespace EngieChallenge.CORE.Services
             output.PlantPower = plannedPower;
             return plannedOutputs;
         }
-
-
-        private List<PlannedOutput> HandleWindTurbine(List<PlannedOutput> plannedOutputs, decimal remainingLoad, PowerPlant powerPlant)
-        {
-            var windPowerOutput = powerPlant.CalculatedPMax;
-            if (remainingLoad >= windPowerOutput)
-            {
-                plannedOutputs = PlanLoad(plannedOutputs, remainingLoad, powerPlant, windPowerOutput);
-                remainingLoad -= windPowerOutput;
-            }
-            return plannedOutputs;
-        }
-
 
         private decimal AdjustForNextPlant(List<PowerPlant> sortedPlants, int index, decimal remainingLoad, decimal preliminaryPowerOutput, PowerPlant powerPlant)
         {
@@ -142,6 +141,17 @@ namespace EngieChallenge.CORE.Services
             }
             return preliminaryPowerOutput;
         }
+
+        private PowerPlant[] ComputeRealCostAndPower(PowerPlant[] powerPlants, Fuel fuel)
+        {
+            foreach (var plant in powerPlants)
+            {
+                plant.ComputePMax(fuel);
+                plant.ComputeFuelCost(fuel);
+            }
+            return powerPlants;
+        }
     }
 }
+
 
