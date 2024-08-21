@@ -17,12 +17,19 @@ namespace EngieChallenge.CORE.Services
         public List<PlannedOutput> GetProductionPlan(List<PowerPlant> powerPlants, Fuel fuel, decimal plannedLoad)
         {
             var calculatedPlants = CalculateRealCostAndPower(powerPlants, fuel);
-            var plannedOutputs = new List<PlannedOutput>();
 
-            // Sort by cost first, wind turbines are not automatically prioritized now
+            // Initialize plannedOutputs with all power plants, defaulting power to 0.0
+            var plannedOutputs = powerPlants
+                .Select(p => new PlannedOutput
+                {
+                    PowerPlantName = p.Name,
+                    PlantPower = 0.0M // Default power to 0.0
+                })
+                .ToList();
+
             var sortedPlants = calculatedPlants
                 .OrderBy(p => p.CalculatedFuelCost)
-                .ThenByDescending(p => p.PMax) // Secondary sorting to prioritize higher capacity plants
+                .ThenByDescending(p => p.PMax)
                 .ToList();
 
             // Try all combinations
@@ -31,9 +38,13 @@ namespace EngieChallenge.CORE.Services
 
             for (int i = 0; i < sortedPlants.Count; i++)
             {
-                var testOutputs = new List<PlannedOutput>();
+                var testOutputs = plannedOutputs.Select(po => new PlannedOutput
+                {
+                    PowerPlantName = po.PowerPlantName,
+                    PlantPower = 0.0M
+                }).ToList();
+
                 var testLoad = plannedLoad;
-                var usedPlants = new HashSet<string>();
 
                 for (int j = i; j < sortedPlants.Count; j++)
                 {
@@ -50,7 +61,6 @@ namespace EngieChallenge.CORE.Services
                         if (testLoad >= preliminaryPowerOutput)
                         {
                             PlanLoad(testOutputs, ref testLoad, powerPlant, preliminaryPowerOutput);
-                            usedPlants.Add(powerPlant.Name);
                         }
                         continue; // Move to the next plant
                     }
@@ -62,7 +72,6 @@ namespace EngieChallenge.CORE.Services
                     if (preliminaryPowerOutput == testLoad && powerPlant.PMin < testLoad)
                     {
                         PlanLoad(testOutputs, ref testLoad, powerPlant, preliminaryPowerOutput);
-                        usedPlants.Add(powerPlant.Name);
                         break;
                     }
 
@@ -71,7 +80,6 @@ namespace EngieChallenge.CORE.Services
                     if (preliminaryPowerOutput >= powerPlant.PMin)
                     {
                         PlanLoad(testOutputs, ref testLoad, powerPlant, preliminaryPowerOutput);
-                        usedPlants.Add(powerPlant.Name);
                     }
                 }
 
@@ -99,6 +107,14 @@ namespace EngieChallenge.CORE.Services
             throw new PlannedOutputCalculationException("Unable to calculate planned output. Remaining load cannot be fulfilled.");
         }
 
+        private void PlanLoad(List<PlannedOutput> plannedOutputs, ref decimal remainingLoad, PowerPlant powerPlant, decimal plannedPower)
+        {
+            var output = plannedOutputs.First(po => po.PowerPlantName == powerPlant.Name);
+            output.PlantPower = plannedPower;
+            remainingLoad -= plannedPower;
+        }
+
+
 
 
         private void HandleWindTurbine(List<PlannedOutput> plannedOutputs, ref decimal remainingLoad, PowerPlant powerPlant, HashSet<string> usedPlants)
@@ -107,7 +123,6 @@ namespace EngieChallenge.CORE.Services
             if (remainingLoad >= windPowerOutput)
             {
                 PlanLoad(plannedOutputs, ref remainingLoad, powerPlant, windPowerOutput);
-                usedPlants.Add(powerPlant.Name);
             }
         }
 
@@ -128,15 +143,6 @@ namespace EngieChallenge.CORE.Services
             return preliminaryPowerOutput;
         }
 
-        private void PlanLoad(List<PlannedOutput> plannedOutputs, ref decimal remainingLoad, PowerPlant powerPlant, decimal plannedPower)
-        {
-            plannedOutputs.Add(new PlannedOutput
-            {
-                PowerPlantName = powerPlant.Name,
-                PlantPower = plannedPower
-            });
-            remainingLoad -= plannedPower;
-        }
 
         private List<PowerPlant> CalculateRealCostAndPower(List<PowerPlant> powerPlants, Fuel fuel)
         {
