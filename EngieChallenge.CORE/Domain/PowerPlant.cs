@@ -9,7 +9,6 @@ public abstract class PowerPlant
     public decimal PMax { get; set; }
     public decimal CalculatedPMax { get; protected set; }
     public decimal CalculatedFuelCost { get; protected set; }
-
     public abstract void CalculatePMax(Fuel fuel);
     public abstract void CalculateFuelCost(Fuel fuel);
 }
@@ -20,7 +19,6 @@ public class WindTurbine : PowerPlant
     {
         CalculatedPMax = PMax * (fuel.Wind / 100.0M);
     }
-
     public override void CalculateFuelCost(Fuel fuel)
     {
         CalculatedFuelCost = 0.0M;
@@ -33,7 +31,6 @@ public class GasFired : PowerPlant
     {
         CalculatedPMax = PMax;
     }
-
     public override void CalculateFuelCost(Fuel fuel)
     {
         CalculatedFuelCost = fuel.Gas / Efficiency;
@@ -46,7 +43,6 @@ public class TurboJet : PowerPlant
     {
         CalculatedPMax = PMax;
     }
-
     public override void CalculateFuelCost(Fuel fuel)
     {
         CalculatedFuelCost = fuel.Kerosine / Efficiency;
