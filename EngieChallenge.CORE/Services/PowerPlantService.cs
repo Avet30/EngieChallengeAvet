@@ -26,9 +26,9 @@ namespace EngieChallenge.CORE.Services
 
             //Generate all plant results
             var results = sortedPlants
-                .Select(p => GeneratePlanResult(sortedPlants, plannedLoad, p))
+                .Select(p => CreatePowerPlanScenario(sortedPlants, plannedLoad, p))
                 .ToList();
-            results.Add(GeneratePlanResult(sortedPlants, plannedLoad, null)); // Calculate without ignoring any plant
+            results.Add(CreatePowerPlanScenario(sortedPlants, plannedLoad, null)); // Calculate without ignoring any plant
 
             //Find best result
             var bestResult = results
@@ -51,12 +51,12 @@ namespace EngieChallenge.CORE.Services
                 return finalOutputs;
             }
 
-            // If no valid plan was found, throw an exception
+            // Log and throw an exception if no valid plan was found
             _logger.LogWarning($"Unable to fulfill planned load. Remaining load: {plannedLoad}");
             throw new PlannedOutputCalculationException("Unable to calculate planned output. Remaining load cannot be fulfilled.");
         }
 
-        private PlanScenario GeneratePlanResult(List<PowerPlant> sortedPlants, decimal plannedLoad, PowerPlant elementToIgnore)
+        private PlanScenario CreatePowerPlanScenario(List<PowerPlant> sortedPlants, decimal plannedLoad, PowerPlant elementToIgnore)
         {
             // Initialize the plannedOutputs list with all power plants, setting initial power to 0 for each.
             var plannedOutputs = sortedPlants
@@ -89,7 +89,7 @@ namespace EngieChallenge.CORE.Services
                     // assign the output and reduce the remaining load accordingly.
                     if (remainingLoad >= preliminaryPowerOutput)
                     {
-                        PlanLoad(plannedOutputs, remainingLoad, powerPlant, preliminaryPowerOutput);
+                        UpdatePowerPlantOutput(plannedOutputs, remainingLoad, powerPlant, preliminaryPowerOutput);
                         remainingLoad -= preliminaryPowerOutput;
                     }
                     continue;
@@ -102,7 +102,7 @@ namespace EngieChallenge.CORE.Services
                 // assign the output and break out of the loop since the load is fulfilled.
                 if (preliminaryPowerOutput == remainingLoad && powerPlant.PMin < remainingLoad)
                 {
-                    PlanLoad(plannedOutputs, remainingLoad, powerPlant, preliminaryPowerOutput);
+                    UpdatePowerPlantOutput(plannedOutputs, remainingLoad, powerPlant, preliminaryPowerOutput);
                     remainingLoad -= preliminaryPowerOutput;
                     break;
                 }
@@ -113,7 +113,7 @@ namespace EngieChallenge.CORE.Services
                 // If the adjusted power output is greater than or equal to the plant's minimum power, assign the output and reduce the remaining load.
                 if (preliminaryPowerOutput >= powerPlant.PMin)
                 {
-                    PlanLoad(plannedOutputs, remainingLoad, powerPlant, preliminaryPowerOutput);
+                    UpdatePowerPlantOutput(plannedOutputs, remainingLoad, powerPlant, preliminaryPowerOutput);
                     remainingLoad -= preliminaryPowerOutput;
                 }
             }
@@ -128,13 +128,11 @@ namespace EngieChallenge.CORE.Services
             };
         }
 
-
-        private List<PlannedOutput> PlanLoad(List<PlannedOutput> plannedOutputs, decimal remainingLoad, PowerPlant powerPlant, decimal plannedPower)
+        private List<PlannedOutput> UpdatePowerPlantOutput(List<PlannedOutput> plannedOutputs, decimal remainingLoad, PowerPlant powerPlant, decimal plannedPower)
         {
             plannedOutputs.First(po => po.PowerPlantName == powerPlant.Name).PlantPower = plannedPower;
             return plannedOutputs;
         }
-
 
         private decimal AdjustForNextPlant(List<PowerPlant> sortedPlants, int index, decimal remainingLoad, decimal preliminaryPowerOutput, PowerPlant powerPlant)
         {
@@ -155,10 +153,8 @@ namespace EngieChallenge.CORE.Services
                     }
                 }
             }
-
             return preliminaryPowerOutput;
         }
-
 
         private PowerPlant[] ComputeRealCostAndPower(PowerPlant[] powerPlants, Fuel fuel)
         {

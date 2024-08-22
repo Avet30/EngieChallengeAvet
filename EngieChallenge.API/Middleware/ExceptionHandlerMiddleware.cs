@@ -1,79 +1,54 @@
-﻿//using EngieChallenge.CORE.Services.Exceptions;
-//using Microsoft.AspNetCore.Http;
-//using Microsoft.Extensions.Logging;
-//using Newtonsoft.Json;
-//using System;
-//using System.ComponentModel.DataAnnotations;
-//using System.Net;
-//using System.Text.Json;
-//using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Net;
+using System.Threading.Tasks;
+using EngieChallenge.CORE.Domain.Exceptions;
 
-//public class ExceptionHandlerMiddleware
-//{
-//    private readonly RequestDelegate _next;
-//    private readonly ILogger<ExceptionHandlerMiddleware> _logger;
+public class ExceptionHandlingMiddleware
+{
+    private readonly RequestDelegate _next;
+    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
-//    public ExceptionHandlerMiddleware(RequestDelegate next, ILogger<ExceptionHandlerMiddleware> logger)
-//    {
-//        _next = next;
-//        _logger = logger;
-//    }
+    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
+    {
+        _next = next;
+        _logger = logger;
+    }
 
-//    public async Task Invoke(HttpContext context)
-//    {
-//        try
-//        {
-//            var requestContent = "";
-//            context.Request.EnableBuffering();
-//            var reader = new StreamReader(context.Request.Body);
+    public async Task InvokeAsync(HttpContext httpContext)
+    {
+        try
+        {
+            await _next(httpContext);
+        }
+        catch (Exception ex)
+        {
+            await HandleExceptionAsync(httpContext, ex);
+        }
+    }
 
-//            requestContent = await reader.ReadToEndAsync();
+    private Task HandleExceptionAsync(HttpContext context, Exception exception)
+    {
+        _logger.LogError(exception, "An unhandled exception occurred.");
 
-//            context.Request.Body.Position = 0;
-//            _logger.LogInformation(requestContent);
-//            await _next(context);
-//        }
-//        catch (Exception ex)
-//        {
-//            _logger.LogError(ex, ex.Message, ex.StackTrace);
-//            await ConvertException(context, ex);
-//        }
-//    }
+        var statusCode = HttpStatusCode.InternalServerError;
+        var response = new ErrorResponse
+        {
+            Message = "An error occurred while processing your request.",
+            Details = exception.Message,
+            Timestamp = DateTime.UtcNow
+        };
 
-//    private Task ConvertException(HttpContext context, Exception exception)
-//    {
-//        HttpStatusCode httpStatusCode = HttpStatusCode.InternalServerError;
+        if (exception is PlannedOutputCalculationException)
+        {
+            statusCode = HttpStatusCode.BadRequest;
+            response.Message = "Error in calculating planned output.";
+        }
 
-//        context.Response.ContentType = "application/json";
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = (int)statusCode;
 
-//        var result = string.Empty;
-
-//        switch (exception)
-//        {
-//            case EngieChallenge.CORE.Services.Exceptions.ValidationException validationException:
-//                httpStatusCode = HttpStatusCode.BadRequest;
-//                result = System.Text.Json.JsonSerializer.Serialize(validationException.ValidationErrors);
-//                break;
-//            case BadRequestException badRequestException:
-//                httpStatusCode = HttpStatusCode.BadRequest;
-//                result = badRequestException.Message;
-//                break;
-//            case NotFoundException:
-//                httpStatusCode = HttpStatusCode.NotFound;
-//                break;
-//            case Exception:
-//                httpStatusCode = HttpStatusCode.InternalServerError;
-//                break;
-//        }
-
-//        context.Response.StatusCode = (int)httpStatusCode;
-
-//        if (result == string.Empty)
-//        {
-//            result = System.Text.Json.JsonSerializer.Serialize(new { error = exception.Message });
-//        }
-
-//        return context.Response.WriteAsync(result);
-//    }
-//}
-
+        return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response));
+    }
+}

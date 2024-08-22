@@ -21,17 +21,10 @@ namespace EngieChallenge.API.Controllers
         [HttpPost]
         public IActionResult Compute([FromBody] Payload request)
         {
-            try
-            {
-                var plannedOutput = _powerPlantService.GetProductionPlan(request.Powerplants, request.Fuels, request.Load);
 
-                return Ok(plannedOutput);
-            }
-            catch (PlannedOutputCalculationException ex)
-            {
-                _Logger.LogError($"An error occurred while calculating planned output: {ex.Message}");
-                return BadRequest("Unable to calculate planned output. Remaining load cannot be fulfilled.");
-            }
+            var plannedOutput = _powerPlantService.GetProductionPlan(request.Powerplants, request.Fuels, request.Load);
+
+            return Ok(plannedOutput);
         }
     }
 }

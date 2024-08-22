@@ -29,7 +29,7 @@ namespace EngieChallenge.API
             
             var app = builder.Build();
 
-            //app.UseMiddleware<ExceptionHandlerMiddleware>();
+            
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -38,7 +38,7 @@ namespace EngieChallenge.API
                 app.UseSwaggerUI();
             }
 
-            
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.UseHttpsRedirection();
 
