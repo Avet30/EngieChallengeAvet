@@ -1,14 +1,10 @@
-﻿using EngieChallenge.CORE.Domain;
+﻿namespace EngieChallenge.CORE.Domain.PowerPlantTypes;
 
 public class TurboJet : PowerPlant
 {
-    public override void ComputePMax(Fuel fuel)
+    public override void ComputePMaxAndFuelCost(Fuel fuel)
     {
-        CalculatedPMax = PMax;
+        EffectivePowerOutput = PMax;
+        FuelCostPerMWh = fuel.Kerosine / Efficiency;
     }
-    public override void ComputeFuelCost(Fuel fuel)
-    {
-        CalculatedFuelCost = fuel.Kerosine / Efficiency;
-    }
-}  
-
+}

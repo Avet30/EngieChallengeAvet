@@ -1,6 +1,8 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using EngieChallenge.CORE.Domain;
 using EngieChallenge.CORE.Domain.Enums;
+using EngieChallenge.CORE.Domain.PowerPlantTypes;
 
 namespace EngieChallenge.CORE.Services;
 
@@ -20,6 +22,11 @@ public class PowerPlantJsonConverter : JsonConverter<PowerPlant>
 
     private PowerPlant MapToDomain(PowerPlantDto dto)
     {
+        if (dto == null)
+        {
+            throw new ArgumentNullException(nameof(dto), "The PowerPlantDto object cannot be null.");
+        }
+
         PowerPlant powerPlant = dto.Type switch
         {
             PowerPlantTypeEnum.WindTurbine => new WindTurbine(),

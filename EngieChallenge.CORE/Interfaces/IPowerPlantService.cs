@@ -4,5 +4,5 @@ namespace EngieChallenge.CORE.Interfaces;
 
 public interface IPowerPlantService
 {
-    List<PlannedOutput> GetProductionPlan(PowerPlant[] powerPlants, Fuel fuel, decimal plannedLoad);
+    List<PlannedOutput> GetProductionPlan(List<PowerPlant> powerPlants, Fuel fuel, decimal plannedLoad);
 }

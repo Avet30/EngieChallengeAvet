@@ -1,14 +1,10 @@
-﻿using EngieChallenge.CORE.Domain;
+﻿namespace EngieChallenge.CORE.Domain.PowerPlantTypes;
 
 public class WindTurbine : PowerPlant
 {
-    public override void ComputePMax(Fuel fuel)
+    public override void ComputePMaxAndFuelCost(Fuel fuel)
     {
-        CalculatedPMax = PMax * (fuel.Wind / 100.0M);
-    }
-    public override void ComputeFuelCost(Fuel fuel)
-    {
-        CalculatedFuelCost = 0.0M;
+        EffectivePowerOutput = PMax * (fuel.Wind / 100.0M);
+        FuelCostPerMWh = 0.0M; // No fuel cost for wind turbines
     }
 }
-

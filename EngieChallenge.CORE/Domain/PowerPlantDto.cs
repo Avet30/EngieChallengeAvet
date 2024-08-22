@@ -1,6 +1,8 @@
 ﻿using System.Text.Json.Serialization;
 using EngieChallenge.CORE.Domain.Enums;
 
+namespace EngieChallenge.CORE.Domain;
+
 public class PowerPlantDto
 {
     [JsonPropertyName("name")]
