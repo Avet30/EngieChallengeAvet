@@ -58,7 +58,7 @@ namespace EngieChallenge.CORE.Services
 
         private PlanScenario GeneratePlanResult(List<PowerPlant> sortedPlants, decimal plannedLoad, PowerPlant elementToIgnore)
         {
-            // If plannedOutputs is null, initialize it
+            // Initialize the plannedOutputs list with all power plants, setting initial power to 0 for each.
             var plannedOutputs = sortedPlants
                 .Select(p => new PlannedOutput
                 {
@@ -71,6 +71,7 @@ namespace EngieChallenge.CORE.Services
 
             foreach (var powerPlant in sortedPlants)
             {
+                // Skip the power plant if it is the one we intend to ignore for this scenario.
                 if (powerPlant == elementToIgnore)
                     continue;
 
@@ -79,9 +80,13 @@ namespace EngieChallenge.CORE.Services
 
                 decimal preliminaryPowerOutput;
 
+                // Special handling for wind turbines, as they have a fixed output based on wind conditions.
                 if (powerPlant is WindTurbine)
                 {
                     preliminaryPowerOutput = powerPlant.CalculatedPMax;
+
+                    // If the remaining load is greater than or equal to the turbine's maximum output,
+                    // assign the output and reduce the remaining load accordingly.
                     if (remainingLoad >= preliminaryPowerOutput)
                     {
                         PlanLoad(plannedOutputs, remainingLoad, powerPlant, preliminaryPowerOutput);
@@ -90,8 +95,11 @@ namespace EngieChallenge.CORE.Services
                     continue;
                 }
 
+                // For other types of power plants, determine the power output based on remaining load and the plant's capacity.
                 preliminaryPowerOutput = Math.Min(remainingLoad, powerPlant.CalculatedPMax);
 
+                // If the preliminary power output exactly matches the remaining load and the plant's minimum output is less than the remaining load,
+                // assign the output and break out of the loop since the load is fulfilled.
                 if (preliminaryPowerOutput == remainingLoad && powerPlant.PMin < remainingLoad)
                 {
                     PlanLoad(plannedOutputs, remainingLoad, powerPlant, preliminaryPowerOutput);
@@ -99,8 +107,10 @@ namespace EngieChallenge.CORE.Services
                     break;
                 }
 
+                // Adjust the power output considering the next power plant's minimum power requirement.
                 preliminaryPowerOutput = AdjustForNextPlant(sortedPlants, sortedPlants.IndexOf(powerPlant), remainingLoad, preliminaryPowerOutput, powerPlant);
 
+                // If the adjusted power output is greater than or equal to the plant's minimum power, assign the output and reduce the remaining load.
                 if (preliminaryPowerOutput >= powerPlant.PMin)
                 {
                     PlanLoad(plannedOutputs, remainingLoad, powerPlant, preliminaryPowerOutput);
@@ -118,29 +128,37 @@ namespace EngieChallenge.CORE.Services
             };
         }
 
+
         private List<PlannedOutput> PlanLoad(List<PlannedOutput> plannedOutputs, decimal remainingLoad, PowerPlant powerPlant, decimal plannedPower)
         {
-            var output = plannedOutputs.First(po => po.PowerPlantName == powerPlant.Name);
-            output.PlantPower = plannedPower;
+            plannedOutputs.First(po => po.PowerPlantName == powerPlant.Name).PlantPower = plannedPower;
             return plannedOutputs;
         }
+
 
         private decimal AdjustForNextPlant(List<PowerPlant> sortedPlants, int index, decimal remainingLoad, decimal preliminaryPowerOutput, PowerPlant powerPlant)
         {
             if (index < sortedPlants.Count - 1)
             {
                 var nextPowerPlant = sortedPlants[index + 1];
+
+                // Check if the next power plant's minimum output is greater than the remaining load after assigning the preliminary output
                 if (nextPowerPlant.PMin > (remainingLoad - preliminaryPowerOutput))
                 {
+                    // Adjust the preliminary output to ensure that the remaining load will be enough to meet the next plant's minimum output
                     preliminaryPowerOutput = remainingLoad - nextPowerPlant.PMin;
+
+                    // If the adjusted preliminary output is less than the current plant's minimum output, set it to the minimum output of the current plant
                     if (preliminaryPowerOutput < powerPlant.PMin)
                     {
                         preliminaryPowerOutput = powerPlant.PMin;
                     }
                 }
             }
+
             return preliminaryPowerOutput;
         }
+
 
         private PowerPlant[] ComputeRealCostAndPower(PowerPlant[] powerPlants, Fuel fuel)
         {
