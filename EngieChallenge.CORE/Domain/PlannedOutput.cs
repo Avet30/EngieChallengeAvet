@@ -1,8 +1,7 @@
-﻿namespace EngieChallenge.CORE.Domain
+﻿namespace EngieChallenge.CORE.Domain;
+
+public class PlannedOutput
 {
-    public class PlannedOutput
-    {
-        public string? PowerPlantName { get; set; }
-        public decimal PlantPower { get; set; }
-    }
+    public string? PowerPlantName { get; set; }
+    public decimal PlantPower { get; set; }
 }

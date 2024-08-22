@@ -1,6 +1,8 @@
-﻿public class ErrorResponse
+﻿namespace EngieChallenge.CORE.Domain.Exceptions;
+
+public class ErrorResponse
 {
-    public string Message { get; set; }
-    public string Details { get; set; }
-    public DateTime Timestamp { get; set; }
+    public string? Message { get; set; }
+    public string? Details { get; set; }
+    public DateTime? Timestamp { get; set; }
 }

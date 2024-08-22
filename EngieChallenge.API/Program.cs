@@ -1,3 +1,4 @@
+using EngieChallenge.API.Middleware;
 using EngieChallenge.CORE.Interfaces;
 using EngieChallenge.CORE.Services;
 using System.Text.Json.Serialization;

@@ -8,7 +8,7 @@ public class PowerPlantDto
 
     [JsonPropertyName("type")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public PowerPlantType Type { get; set; }
+    public PowerPlantTypeEnum Type { get; set; }
 
     [JsonPropertyName("efficiency")]
     public decimal Efficiency { get; set; }

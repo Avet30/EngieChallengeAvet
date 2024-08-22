@@ -2,6 +2,8 @@
 using System.Text.Json.Serialization;
 using EngieChallenge.CORE.Domain.Enums;
 
+namespace EngieChallenge.CORE.Services;
+
 public class PowerPlantJsonConverter : JsonConverter<PowerPlant>
 {
     public override PowerPlant Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -20,9 +22,9 @@ public class PowerPlantJsonConverter : JsonConverter<PowerPlant>
     {
         PowerPlant powerPlant = dto.Type switch
         {
-            PowerPlantType.windturbine => new WindTurbine(),
-            PowerPlantType.gasfired => new GasFired(),
-            PowerPlantType.turbojet => new TurboJet(),
+            PowerPlantTypeEnum.WindTurbine => new WindTurbine(),
+            PowerPlantTypeEnum.GasFired => new GasFired(),
+            PowerPlantTypeEnum.TurboJet => new TurboJet(),
             _ => throw new ArgumentException($"Unknown PowerPlantType: {dto.Type}")
         };
 
@@ -36,11 +38,11 @@ public class PowerPlantJsonConverter : JsonConverter<PowerPlant>
 
     private PowerPlantDto MapToDto(PowerPlant powerPlant)
     {
-        PowerPlantType type = powerPlant switch
+        PowerPlantTypeEnum type = powerPlant switch
         {
-            WindTurbine => PowerPlantType.windturbine,
-            GasFired => PowerPlantType.gasfired,
-            TurboJet => PowerPlantType.turbojet,
+            WindTurbine => PowerPlantTypeEnum.WindTurbine,
+            GasFired => PowerPlantTypeEnum.GasFired,
+            TurboJet => PowerPlantTypeEnum.TurboJet,
             _ => throw new ArgumentException("Unknown PowerPlantType")
         };
 
