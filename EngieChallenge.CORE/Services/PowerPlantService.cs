@@ -17,7 +17,6 @@ public class PowerPlantService : IPowerPlantService
 
     public List<PlannedOutput> GetProductionPlan(PowerPlant[] powerPlants, Fuel fuel, decimal plannedLoad)
     {
-        //TODO foreach classic
         foreach(var powerPlant in powerPlants)
         {
             powerPlant.ComputeEffectivePowerOutputAndFuelCost(fuel);
