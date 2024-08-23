@@ -8,5 +8,5 @@ public abstract class PowerPlant
     public decimal PMax { get; set; }
     public decimal EffectivePowerOutput { get; protected set; }
     public decimal FuelCostPerMWh { get; protected set; }
-    public abstract void ComputePMaxAndFuelCost(Fuel fuel);
+    public abstract void ComputeEffectivePowerOutputAndFuelCost(Fuel fuel);
 }

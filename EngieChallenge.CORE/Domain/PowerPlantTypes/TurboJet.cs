@@ -2,7 +2,7 @@
 
 public class TurboJet : PowerPlant
 {
-    public override void ComputePMaxAndFuelCost(Fuel fuel)
+    public override void ComputeEffectivePowerOutputAndFuelCost(Fuel fuel)
     {
         EffectivePowerOutput = PMax;
         FuelCostPerMWh = fuel.Kerosine / Efficiency;

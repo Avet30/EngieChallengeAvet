@@ -15,10 +15,14 @@ public class PowerPlantService : IPowerPlantService
         _logger = logger;
     }
 
-    public List<PlannedOutput> GetProductionPlan(List<PowerPlant> powerPlants, Fuel fuel, decimal plannedLoad)
+    public List<PlannedOutput> GetProductionPlan(PowerPlant[] powerPlants, Fuel fuel, decimal plannedLoad)
     {
-        powerPlants.ForEach(plant => plant.ComputePMaxAndFuelCost(fuel));
-
+        //TODO foreach classic
+        foreach(var powerPlant in powerPlants)
+        {
+            powerPlant.ComputeEffectivePowerOutputAndFuelCost(fuel);
+        }
+ 
         //Sort plants
         var sortedPlants = powerPlants
             .OrderBy(p => p.FuelCostPerMWh)
@@ -33,7 +37,7 @@ public class PowerPlantService : IPowerPlantService
 
         //Find best result
         var bestScenario = scenarios
-            .Where(r => r.RemainingLoad <= 0) // Ensure only valid results are considered
+            .Where(r => r.RemainingLoad == 0) // Ensure only valid results are considered
             .OrderBy(r => r.TotalCost)        // Find the one with the lowest cost
             .FirstOrDefault();
 
@@ -69,11 +73,15 @@ public class PowerPlantService : IPowerPlantService
         {
             // Skip the power plant if it is the one we intend to ignore for this scenario.
             if (powerPlant == excludedPlant)
-                continue;
+            { 
+                continue; 
+            }
 
-            if (remainingLoad <= 0)
+            if (remainingLoad == 0)
+            {
                 break;
-
+            }
+                
             decimal PowerOutput;
 
             // Special handling for wind turbines, as they have a fixed output based on wind conditions.
@@ -128,12 +136,19 @@ public class PowerPlantService : IPowerPlantService
 
     private static decimal AdjustForNextPlant(List<PowerPlant> sortedPlants, int index, decimal remainingLoad, decimal PowerOutput, PowerPlant powerPlant)
     {
-        if (index >= sortedPlants.Count - 1) return PowerOutput;
+        if (index >= sortedPlants.Count - 1)
+        {
+            return PowerOutput;
+        }
+
         var nextPowerPlant = sortedPlants[index + 1];
 
         // Check if the next power plant's minimum output is greater than the remaining load after assigning the preliminary output
-        if (nextPowerPlant.PMin <= (remainingLoad - PowerOutput)) return PowerOutput;
-
+        if (nextPowerPlant.PMin <= (remainingLoad - PowerOutput)) 
+        { 
+            return PowerOutput; 
+        }
+       
         // Adjust the preliminary output to ensure that the remaining load will be enough to meet the next plant's minimum output
         PowerOutput = remainingLoad - nextPowerPlant.PMin;
 
